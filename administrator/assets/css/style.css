@@ -373,17 +373,6 @@ h6 {
   margin-right: 6px;
 }
 
-.card-body span {
-  font-weight: 500;
-  font-size: 18px;
-  color: #000000;
-  font-family: "Nunito", sans-serif;
-}
-.card-body h1 {
-  font-size: 16px;
-  color: #000000;
-  font-family: "Nunito", sans-serif;
-}
 .student img {
   max-height: 20vh;
   margin-right: 6px;

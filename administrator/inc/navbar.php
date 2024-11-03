@@ -8,10 +8,6 @@ if ($userId) {
   // Fetch user's first name, last name, profile picture, and user role
   $stmt = $con->prepare("SELECT firstname, middlename, lastname, profile_picture, userrole FROM user WHERE user_id = ?");
 
-  if (!$stmt) {
-    die("SQL prepare failed: " . $con->error);
-  }
-
   $stmt->bind_param("i", $userId);
   $stmt->execute();
   $result = $stmt->get_result();
@@ -28,20 +24,20 @@ if ($userId) {
       // Combine first and last name
       $fullname = $firstname . ' ' . $middlename . ' ' . $lastname; // Create full name
     } else {
-      // No user found: destroy session and redirect
+      /* No user found: destroy session and redirect
       session_destroy(); // Destroy the session
       header("Location: ../index.php"); // Redirect to the login page
-      exit(); // Exit to ensure no further code is executed
+      exit(); // Exit to ensure no further code is executed*/
     }
   } else {
-    session_destroy(); // Destroy the session
+    /*session_destroy(); // Destroy the session
     header("Location: ../index.php"); // Redirect to the login page
-    exit();
+    exit();*/
   }
 } else {
-  session_destroy(); // Destroy the session
+  /*session_destroy(); // Destroy the session
   header("Location: ../index.php"); // Redirect to the login page
-  exit();
+  exit();*/
 }
 ?>
 
@@ -92,7 +88,7 @@ if ($userId) {
           </li>
 
           <li>
-            <a class="dropdown-item d-flex align-items-center" href="#">
+            <a class="dropdown-item d-flex align-items-center" href="../backend/logout.php">
               <i class="bi bi-box-arrow-right"></i>
               <span>Sign Out</span>
             </a>

@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -75,6 +78,7 @@
                   <tr>
                     <th style="width: 20%">Title</th>
                     <th style="width: 15%">Author</th>
+                    <th class="mi">Publisher</th>
                     <th class="mi">ISBN</th>
                     <th>Location</th>
                     <th>Copies</th>
@@ -100,6 +104,7 @@
                     echo "<tr>";
                     echo "<td>" . htmlspecialchars($row['title']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['author']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['publisher']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['isbn']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['location']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['copies']) . "</td>";

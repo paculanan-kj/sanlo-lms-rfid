@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -62,6 +65,7 @@
                 <tr>
                   <th style="width: 15%;">Title</th>
                   <th style="width: 10%;">Author</th>
+                  <th>Publisher</th>
                   <th>ISBN</th>
                   <th>Location</th>
                   <th>Copies</th>

@@ -20,7 +20,7 @@ if (isset($_POST['rfid']) && !empty($_POST['rfid'])) {
             // Store user information in session
             $_SESSION['username'] = $row['username']; // Store the username in session
             $_SESSION['user_id'] = $row['user_id']; // Store the user_id in session
-            
+
             // Redirect to administrator.php since there's only one user (librarian)
             header("Location: ../administrator/index.php?user_id=" . $_SESSION['user_id']);
             exit();
@@ -92,4 +92,3 @@ if (isset($_SESSION['error']) && strpos($_SESSION['error'], 'Invalid RFID tag!')
 }
 
 $con->close();
-?>

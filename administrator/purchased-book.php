@@ -1,4 +1,6 @@
-
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -79,22 +81,22 @@
 
                 // Check for errors
                 if ($result === false) {
-                    die("Error fetching data: " . $con->error);
+                  die("Error fetching data: " . $con->error);
                 }
 
                 // Fetch and display each book
                 while ($row = $result->fetch_assoc()) {
-                    echo "<tr>";
-                    echo "<td>" . htmlspecialchars($row['title']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['author']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['isbn']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['publisher']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['publication_year']) . "</td>";
-                    echo "<td>
-                            <a href='#' class='btn btn-success btn-sm btn-update' data-id='".$row['book_id']."' data-bs-toggle='modal' data-bs-target='#updatebook'>Update</a>
+                  echo "<tr>";
+                  echo "<td>" . htmlspecialchars($row['title']) . "</td>";
+                  echo "<td>" . htmlspecialchars($row['author']) . "</td>";
+                  echo "<td>" . htmlspecialchars($row['isbn']) . "</td>";
+                  echo "<td>" . htmlspecialchars($row['publisher']) . "</td>";
+                  echo "<td>" . htmlspecialchars($row['publication_year']) . "</td>";
+                  echo "<td>
+                            <a href='#' class='btn btn-success btn-sm btn-update' data-id='" . $row['book_id'] . "' data-bs-toggle='modal' data-bs-target='#updatebook'>Update</a>
                             <a href='#' class='btn btn-danger btn-sm'>Delete</a>
                           </td>";
-                    echo "</tr>";
+                  echo "</tr>";
                 }
                 ?>
               </tbody>
