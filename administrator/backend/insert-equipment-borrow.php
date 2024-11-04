@@ -4,8 +4,8 @@ include 'dbcon.php'; // Include your database connection file
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Collect data from the form
-    $student_id = $_POST['student_id'];
-    $equipment_list = json_decode($_POST['equipment_list'], true);
+    $student_id = $_POST['student_id']; // Get the single student ID
+    $equipment_list = json_decode($_POST['equipment_list'], true); // Get the equipment list
     $status = 'borrowed'; // Assuming the status is set to 'borrowed'
 
     // Prepare an SQL statement

@@ -79,16 +79,18 @@ session_start();
                 <?php
                 // SQL query to join tables and fetch the necessary fields
                 $sql = "SELECT e.equipment_id, 
-                   CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
-                   s.gradelevel,
-                   e.equipment AS equipment_name,  -- Adjusted to reflect your equipment table
-                   bb.status, 
-                   bb.quantity,
-                   bb.created_at
-            FROM book_borrow bb
-            JOIN student s ON bb.student_id = s.student_id
-            JOIN equipment_borrow e ON e.equipment_id = e.equipment_id  -- Assuming you have an equipment table
-            WHERE bb.quantity > 0 ORDER BY e.equipment_id DESC"; // Exclude entries with quantity 0
+           CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
+           s.gradelevel,
+           e.equipment AS equipment_name, 
+           bb.status, 
+           bb.quantity,
+           bb.created_at
+        FROM book_borrow bb
+        JOIN student s ON bb.student_id = s.student_id
+        JOIN equipment_borrow e ON e.equipment_id = e.equipment_id  
+        WHERE bb.quantity > 0 
+        ORDER BY e.equipment_id DESC"; // Exclude entries with quantity 0
+
 
                 $result = $con->query($sql);
 
@@ -118,7 +120,7 @@ session_start();
 
                     // Action buttons with modals
                     echo "<td>";
-                    echo "<button type='button' class='btn btn-success btn-sm' data-id='" . $row['equipment_id'] . "'>Return</button> "; // For removing equipment
+                    echo "<button type='button' class='btn btn-success btn-sm' data-bs-toggle='modal' data-bs-target='#returnModal' data-id='" . $row['equipment_id'] . "'>Return</button> "; // For removing equipment
                     echo "<button type='button' class='btn btn-primary btn-sm' data-bs-toggle='modal' data-bs-target='#editModal' data-id='" . $row['equipment_id'] . "'>Edit</button> ";
                     echo "</td>";
                     echo "</tr>";
@@ -186,7 +188,7 @@ session_start();
                     <ul id="equipmentList" class="list-group mt-4"></ul> <!-- List to display added equipment -->
                   </div>
                 </div>
-                <input type="hidden" class="form-control" id="studentId" name="student_id" required readonly>
+                <input type="text" class="form-control" id="studentId" name="student_id" required readonly>
               </div>
             </div>
             <div class="modal-footer">
@@ -198,6 +200,38 @@ session_start();
       </div>
     </div>
 
+    <!-- Return Book Modal -->
+    <div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="returnModalLabel">Return Book</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="returnForm">
+              <input type="hidden" id="equipment_id" name="equipment_id" value="">
+              <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+              </div>
+              <div class="mb-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status" required>
+                  <option value="returned">Returned</option>
+                  <option value="damaged">Damaged</option>
+                  <option value="lost">Lost</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="submitReturn">Submit Return</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </main><!-- End #main -->
 
@@ -360,12 +394,10 @@ session_start();
         $(this).closest('li').remove(); // Remove the list item
       });
 
-      // Clear all inputs, equipment list, and profile picture when modal is closed
+      // Clear all inputs and equipment list when modal is closed
       $('#borrowModal').on('hidden.bs.modal', function() {
         $('#addBookBorrowForm')[0].reset(); // Reset the form inputs
         $('#equipmentList').empty(); // Clear the equipment list
-        $('#profilePicture').attr('src', '').hide(); // Reset and hide the profile picture
-        $('#profilePictureInput').val(''); // Clear the hidden profile picture input
       });
 
       // Handle the form submission
@@ -386,6 +418,15 @@ session_start();
           value: JSON.stringify(equipmentList)
         });
 
+        // Assuming you have a single student ID selected from a dropdown or similar input
+        var student_id = $('#student_id').val(); // Get the selected student ID
+
+        // Add the student ID to the form data
+        formData.push({
+          name: 'student_id',
+          value: student_id
+        });
+
         // AJAX call to insert the data
         $.ajax({
           type: 'POST',
@@ -396,6 +437,7 @@ session_start();
             var result = JSON.parse(response); // Parse the JSON response
             if (result.success) {
               Swal.fire("Success!", result.message, "success").then(() => {
+                location.reload();
                 $('#borrowModal').modal('hide'); // Close the modal
               });
             } else {
@@ -405,6 +447,67 @@ session_start();
           error: function(xhr) {
             console.error("AJAX error occurred:", xhr.responseText); // Log any error response
             Swal.fire("Error!", 'Error borrowing equipment. Please try again.', "error"); // Display error alert
+          }
+        });
+      });
+    });
+  </script>
+
+
+  <script>
+    $(document).ready(function() {
+      // When the Return button is clicked
+      $('button[data-bs-target="#returnModal"]').on('click', function() {
+        var equipmentId = $(this).data('id'); // Get equipment_id from data attribute
+        $('#equipment_id').val(equipmentId); // Set hidden input field
+        $('#equipment_id_display').val(equipmentId); // Display equipment_id in the modal
+      });
+    });
+
+    $(document).ready(function() {
+      // Handle the submission of the return form
+      $('#submitReturn').on('click', function() {
+        // Serialize the form data
+        var formData = $('#returnForm').serialize();
+
+        // Send the AJAX request
+        $.ajax({
+          type: 'POST',
+          url: 'backend/returned-equipment.php', // Update with your PHP script that handles the insertion
+          data: formData,
+          success: function(response) {
+            // Parse JSON response if your PHP script returns JSON
+            var result = JSON.parse(response);
+            if (result.success) {
+              // Show success message with SweetAlert
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Return submitted successfully!',
+                confirmButtonText: 'OK'
+              }).then(() => {
+                // Close the modal
+                $('#returnModal').modal('hide');
+                // Optionally, refresh or update your table here
+              });
+            } else {
+              // Show error message with SweetAlert
+              Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: result.message || 'An error occurred. Please try again.',
+                confirmButtonText: 'OK'
+              });
+            }
+          },
+          error: function(xhr, status, error) {
+            // Handle AJAX error
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: 'An error occurred: ' + error,
+              confirmButtonText: 'OK'
+            });
           }
         });
       });
