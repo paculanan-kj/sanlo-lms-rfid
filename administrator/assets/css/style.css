@@ -761,13 +761,13 @@ h6 {
   align-items: center;
   font-size: 14px;
   font-weight: 600;
-  color: #012970;
+  color: #1439dd;
   padding: 10px 0 10px 40px;
   transition: 0.3s;
 }
 
 .sidebar-nav .nav-content a i {
-  font-size: 16px;
+  font-size: 8px;
   margin-right: 8px;
   line-height: 0;
   border-radius: 50%;
@@ -775,11 +775,12 @@ h6 {
 
 .sidebar-nav .nav-content a:hover,
 .sidebar-nav .nav-content a.active {
-  color: #4154f1;
+  color: #182ef0;
 }
 
+
 .sidebar-nav .nav-content a.active i {
-  background-color: #4154f1;
+  background-color: #182ef0;
 }
 
 /*--------------------------------------------------------------
@@ -1289,4 +1290,28 @@ table .mp {
 .modal-user {
   max-width: 800px;
   width: 35%;
+}
+
+.suggestions-list {
+  border: 1px solid #ccc;
+  background: white;
+  max-height: 150px;
+  overflow-y: auto;
+  display: none; /* Hidden by default */
+  width: 100%;
+  position: absolute;
+}
+
+
+/*--------------------------------------------------------------
+# Manage Book Search
+--------------------------------------------------------------*/
+
+.suggestion-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background-color: #f0f0f0;
 }

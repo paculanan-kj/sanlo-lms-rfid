@@ -2,6 +2,9 @@
 // Include your database connection
 require_once 'dbcon.php';
 
+// Set the timezone to Philippines
+date_default_timezone_set('Asia/Manila');
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $book_borrow_id = $_POST['book_borrow_id'];
     $returned_quantity = $_POST['quantity'];
