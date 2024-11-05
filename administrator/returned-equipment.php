@@ -20,7 +20,9 @@ include 'backend/dbcon.php';
 
     <!-- Google Fonts -->
     <link href="https://fonts.gstatic.com" rel="preconnect">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+        rel="stylesheet">
 
     <!-- Vendor CSS Files -->
     <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -68,74 +70,84 @@ include 'backend/dbcon.php';
                                     <th>Student Name</th>
                                     <th>Grade Level</th>
                                     <th>Equipment Name</th>
-                                    <th>Quantity</th>
                                     <th>Status</th>
                                     <th>Returned At</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
-                                // SQL query to join tables and retrieve returned equipment
-                                $sql = "SELECT re.return_equipment_id, 
-                    CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
-                    s.gradelevel,
-                    eb.equipment AS equipment_name, -- Assuming you have an equipment name field
-                    re.quantity, 
-                    re.status,
-                    re.returned_at
-                FROM return_equipment re
-                JOIN equipment_borrow eb ON re.equipment_id = eb.equipment_id -- Adjust the join if necessary
-                JOIN student s ON eb.student_id = s.student_id
-                JOIN return_equipment e ON eb.equipment_id = e.equipment_id"; // Assuming you have an equipment table
+                                    // SQL query to join tables and retrieve returned equipment
+                                    $sql = "SELECT re.return_equipment_id, 
+                                                    CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
+                                                    s.gradelevel,
+                                                    s.picture, -- Include the picture field
+                                                    eb.equipment AS equipment_name, -- Assuming you have an equipment name field
+                                                    re.status,
+                                                    re.returned_at
+                                            FROM return_equipment re
+                                            JOIN equipment_borrow eb ON re.equipment_id = eb.equipment_id -- Adjust the join if necessary
+                                            JOIN student s ON eb.student_id = s.student_id"; // Removed unnecessary join
 
-                                $result = $con->query($sql);
+                                    $result = $con->query($sql);
 
-                                // Check if the query was successful
-                                if ($result === false) {
-                                    // Display the SQL error
-                                    echo "<tr><td colspan='5'>Error: " . $con->error . "</td></tr>";
-                                } elseif ($result->num_rows > 0) {
-                                    // Fetch and display records
-                                    while ($row = $result->fetch_assoc()) {
-                                        echo "<tr>";
-                                        echo "<td>" . htmlspecialchars($row['student_name']) . "</td>";
-                                        echo "<td>" . htmlspecialchars($row['gradelevel']) . "</td>";
-                                        echo "<td>" . htmlspecialchars($row['equipment_name']) . "</td>"; // Display equipment name
-                                        echo "<td>" . htmlspecialchars($row['quantity']) . "</td>";
+                                    // Check if the query was successful
+                                    if ($result === false) {
+                                        // Display the SQL error
+                                        echo "<tr><td colspan='5'>Error: " . $con->error . "</td></tr>";
+                                    } elseif ($result->num_rows > 0) {
+                                        // Fetch and display records
+                                        while ($row = $result->fetch_assoc()) {
+                                            echo "<tr>";
 
-                                        // Determine the badge class based on status
-                                        switch (htmlspecialchars($row['status'])) {
-                                            case 'returned':
-                                                $badgeClass = 'bg-success'; // Green for returned
-                                                break;
-                                            case 'damaged':
-                                                $badgeClass = 'bg-danger'; // Red for damaged
-                                                break;
-                                            case 'lost':
-                                                $badgeClass = 'bg-warning'; // Yellow for lost
-                                                break;
-                                            default:
-                                                $badgeClass = 'bg-secondary'; // Grey for unknown status
-                                                break;
+                                            // Display the student's picture
+                                            echo "<td>";
+                                            $picturePath = 'uploads/' . htmlspecialchars($row['picture']); // Adjust this path based on your folder structure
+                                            if (!empty($row['picture'])) {
+                                                echo "<img src='" . $picturePath . "' alt='Picture of " . htmlspecialchars($row['student_name']) . "' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
+                                            } else {
+                                                echo "<img src='path/to/default/image.jpg' alt='Default Picture' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
+                                            }
+                                            echo htmlspecialchars($row['student_name']); // Display student name
+                                            echo "</td>";
+
+                                            // Display the student's grade level
+                                            echo "<td>" . htmlspecialchars($row['gradelevel']) . "</td>";
+                                            echo "<td>" . htmlspecialchars($row['equipment_name']) . "</td>"; // Display equipment name
+
+                                            // Determine the badge class based on status
+                                            switch (htmlspecialchars($row['status'])) {
+                                                case 'returned':
+                                                    $badgeClass = 'bg-success'; // Green for returned
+                                                    break;
+                                                case 'damaged':
+                                                    $badgeClass = 'bg-danger'; // Red for damaged
+                                                    break;
+                                                case 'lost':
+                                                    $badgeClass = 'bg-warning'; // Yellow for lost
+                                                    break;
+                                                default:
+                                                    $badgeClass = 'bg-secondary'; // Grey for unknown status
+                                                    break;
+                                            }
+
+                                            // Display the status with a badge
+                                            echo "<td><span class='badge " . $badgeClass . "'>" . htmlspecialchars($row['status']) . "</span></td>";
+
+                                            // Format the returned_at date
+                                            $returnedAt = date('F j, Y, g:i a', strtotime($row['returned_at']));
+                                            echo "<td>" . htmlspecialchars($returnedAt) . "</td>";
+
+                                            echo "</tr>";
                                         }
-
-                                        // Display the status with a badge
-                                        echo "<td><span class='badge " . $badgeClass . "'>" . htmlspecialchars($row['status']) . "</span></td>";
-
-                                        // Format the returned_at date
-                                        $returnedAt = date('F j, Y, g:i a', strtotime($row['returned_at']));
-                                        echo "<td>" . htmlspecialchars($returnedAt) . "</td>";
-
-                                        echo "</tr>";
+                                    } else {
+                                        // No records found
+                                        echo "<tr><td colspan='5'>No records found.</td></tr>";
                                     }
-                                } else {
-                                    // No records found
-                                    echo "<tr><td colspan='5'>No records found.</td></tr>";
-                                }
 
-                                // Close the database connection
-                                $con->close();
-                                ?>
+                                    // Close the database connection
+                                    $con->close();
+                                    ?>
+
                             </tbody>
                         </table>
 

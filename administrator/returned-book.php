@@ -77,71 +77,71 @@ include 'backend/dbcon.php';
                             </thead>
                             <tbody>
                                 <?php
-    // SQL query to join tables and retrieve returned books
-    $sql = "SELECT br.return_book_id, 
-            CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
-            s.gradelevel,
-            b.title AS book_title, 
-            br.quantity, 
-            br.status,
-            br.returned_at
-            FROM book_return br
-            JOIN book_borrow bb ON br.book_borrow_id = bb.book_borrow_id
-            JOIN student s ON bb.student_id = s.student_id
-            JOIN book b ON bb.book_id = b.book_id";
+        // SQL query to join tables and retrieve returned books along with student images
+        $sql = "SELECT br.return_book_id, 
+                CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
+                s.gradelevel,
+                s.picture,
+                b.title AS book_title, 
+                br.quantity, 
+                br.status,
+                br.returned_at
+                FROM book_return br
+                JOIN book_borrow bb ON br.book_borrow_id = bb.book_borrow_id
+                JOIN student s ON bb.student_id = s.student_id
+                JOIN book b ON bb.book_id = b.book_id";
 
-    $result = $con->query($sql);
+        $result = $con->query($sql);
 
-    // Check if the query was successful
-    if ($result === false) {
-        // Display the SQL error
-        echo "<tr><td colspan='7'>Error: " . $con->error . "</td></tr>";
-    } elseif ($result->num_rows > 0) {
-        // Fetch and display records
-        while ($row = $result->fetch_assoc()) {
-            echo "<tr>";
-            echo "<td>" . htmlspecialchars($row['student_name']) . "</td>";
-            echo "<td>" . htmlspecialchars($row['gradelevel']) . "</td>";
-            echo "<td>" . htmlspecialchars($row['book_title']) . "</td>";
-            // Display the quantity as a badge
-            echo "<td><span class='badge bg-info'>" . htmlspecialchars($row['quantity']) . "</span></td>";
+        if ($result === false) {
+            echo "<tr><td colspan='7'>Error: " . $con->error . "</td></tr>";
+        } elseif ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $picturePath = 'uploads/' . $row['picture']; // Adjust this path as needed
+                
+                echo "<tr>";
+                echo "<td>";
+                echo "<div class='d-flex align-items-center'>";
+                echo "<img src='" . htmlspecialchars($picturePath) . "' alt='Student Image' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
+                echo "<span>" . htmlspecialchars($row['student_name']) . "</span>";
+                echo "</div>";
+                echo "</td>";
+                echo "<td>" . htmlspecialchars($row['gradelevel']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['book_title']) . "</td>";
+                echo "<td><span class='badge bg-info'>" . htmlspecialchars($row['quantity']) . "</span></td>";
 
-            // Determine the badge class based on status
-            switch (htmlspecialchars($row['status'])) {
-                case 'returned':
-                    $badgeClass = 'bg-success'; // Green for returned
-                    break;
-                case 'damaged':
-                    $badgeClass = 'bg-danger'; // Red for damaged
-                    break;
-                case 'lost':
-                    $badgeClass = 'bg-warning'; // Yellow for lost
-                    break;
-                default:
-                    $badgeClass = 'bg-secondary'; // Grey for unknown status
-                    break;
+                // Determine the badge class based on status
+                switch (htmlspecialchars($row['status'])) {
+                    case 'returned':
+                        $badgeClass = 'bg-success';
+                        break;
+                    case 'damaged':
+                        $badgeClass = 'bg-danger';
+                        break;
+                    case 'lost':
+                        $badgeClass = 'bg-warning';
+                        break;
+                    default:
+                        $badgeClass = 'bg-secondary';
+                        break;
+                }
+
+                echo "<td><span class='badge " . $badgeClass . "'>" . htmlspecialchars($row['status']) . "</span></td>";
+
+                $returnedAt = date('F j, Y, g:i a', strtotime($row['returned_at']));
+                echo "<td>" . htmlspecialchars($returnedAt) . "</td>";
+
+                echo "</tr>";
             }
-
-            // Display the status with a badge
-            echo "<td><span class='badge " . $badgeClass . "'>" . htmlspecialchars($row['status']) . "</span></td>";
-
-            // Format the returned_at date
-            $returnedAt = date('F j, Y, g:i a', strtotime($row['returned_at']));
-            echo "<td>" . htmlspecialchars($returnedAt) . "</td>";
-
-            echo "</tr>";
+        } else {
+            echo "<tr><td colspan='7'>No records found.</td></tr>";
         }
-    } else {
-        // No records found
-        echo "<tr><td colspan='7'>No records found.</td></tr>";
-    }
 
-    // Close the database connection
-    $con->close();
-    ?>
+        $con->close();
+        ?>
                             </tbody>
-
                         </table>
+
                     </div>
                 </div>
             </div>

@@ -74,12 +74,12 @@ include 'backend/dbcon.php';
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Dashboard</h1>
+            <h1>Purchased Books</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
-                    <li class="breadcrumb-item">Borrow Books</li>
-                    <li class="breadcrumb-item active">Borrow Books</li>
+                    <li class="breadcrumb-item">Purchased Books</li>
+                    <li class="breadcrumb-item active">Purchase</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -89,80 +89,18 @@ include 'backend/dbcon.php';
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title">Borrowed Books</h5>
+                            <h5 class="card-title">Purchase</h5>
                             <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal"
                                 data-bs-target="#borrowModal">
-                                <i class="bx bx-plus me-1"></i>Borrow
+                                <i class="bx bx-plus me-1"></i>Purchase
                             </button>
                         </div>
                         <table class="table datatable">
                             <thead>
                                 <tr>
-                                    <th style="width: 20%;">Name</th>
-                                    <th style="width: 15%;">Grade Level</th>
-                                    <th style="width: 15%;">Book</th>
-                                    <th>Quantity</th>
-                                    <th>Status</th>
-                                    <th>Borrowed at</th>
-                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php
-            // SQL query to join tables and include student image
-            $sql = "SELECT bb.book_borrow_id, 
-                    CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
-                    s.gradelevel,
-                    s.picture,
-                    b.title AS book_title, 
-                    bb.status, 
-                    bb.quantity,
-                    bb.created_at
-                    FROM book_borrow bb
-                    JOIN student s ON bb.student_id = s.student_id
-                    JOIN book b ON bb.book_id = b.book_id
-                    WHERE bb.quantity > 0 ORDER BY bb.book_id DESC"; // Exclude entries with quantity 0
-
-            $result = $con->query($sql);
-
-            if ($result === false) {
-                echo "<tr><td colspan='7'>Error: " . $con->error . "</td></tr>";
-            } elseif ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    $picturePath = 'uploads/' . $row['picture']; // Adjust this path based on your folder structure
-                    
-                    echo "<tr>";
-                    echo "<td>";
-                    echo "<div class='d-flex align-items-center'>";
-                    echo "<img src='" . htmlspecialchars($picturePath) . "' alt='Student Image' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
-                    echo "<span>" . htmlspecialchars($row['student_name']) . "</span>";
-                    echo "</div>";
-                    echo "</td>";
-                    echo "<td>" . htmlspecialchars($row['gradelevel']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['book_title']) . "</td>";
-                    echo "<td><span class='badge bg-info'>" . htmlspecialchars($row['quantity']) . "</span></td>";
-
-                    if ($row['status'] === 'borrowed') {
-                        echo "<td><span class='badge bg-warning'>Borrowed</span></td>";
-                    } else {
-                        echo "<td><span class='badge bg-secondary'>" . htmlspecialchars($row['status']) . "</span></td>";
-                    }
-
-                    $createdAt = new DateTime($row['created_at']);
-                    echo "<td>" . $createdAt->format('F j, Y, g:i a') . "</td>";
-
-                    echo "<td>";
-                    echo "<button type='button' class='btn btn-success btn-sm' data-bs-toggle='modal' data-bs-target='#returnModal' data-id='" . $row['book_borrow_id'] . "'>Return</button> ";
-                    echo "<button type='button' class='btn btn-primary btn-sm' data-bs-toggle='modal' data-bs-target='#editModal' data-id='" . $row['book_borrow_id'] . "'>Edit</button> ";
-                    echo "</td>";
-                    echo "</tr>";
-                }
-            } else {
-                echo "<tr><td colspan='7'>No records found.</td></tr>";
-            }
-
-            $con->close();
-        ?>
                             </tbody>
                         </table>
 
@@ -501,206 +439,6 @@ include 'backend/dbcon.php';
                 }, 300);
             }
         }
-    });
-    </script>
-
-    <script>
-    document.getElementById('addBookBorrowForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        const formData = {
-            book_id: document.getElementById('bookId').value,
-            student_id: document.getElementById('studentId').value,
-            quantity: document.getElementById('bookQuantity').value,
-            status: 'borrowed' // You can modify the status as needed
-        };
-
-        fetch('backend/insert-book-borrow.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Book borrow record added successfully!'
-                    }).then(() => {
-                        // Reset the form
-                        location.reload();
-                        document.getElementById('addBookBorrowForm').reset();
-                        document.getElementById('borrowModal').classList.remove('show');
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Failed to add the record. Please try again.'
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An unexpected error occurred. Please try again.'
-                });
-            });
-    });
-    </script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Event listener for the return button
-        const returnButtons = document.querySelectorAll('.btn-success');
-        returnButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const bookBorrowId = this.getAttribute('data-id');
-                document.getElementById('book_borrow_id').value = bookBorrowId;
-            });
-        });
-
-        // Event listener for the submit return button
-        document.getElementById('submitReturn').addEventListener('click', function() {
-            const form = document.getElementById('returnForm');
-            const formData = new FormData(form);
-
-            // Sending data to the backend
-            fetch('backend/return-book.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Book returned successfully!',
-                        }).then(() => {
-                            // Refresh the page after closing the alert
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Error returning book: ' + data.message,
-                        });
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-
-        // Reset form inputs when the modal is closed
-        const returnModal = document.getElementById('returnModal');
-        returnModal.addEventListener('hidden.bs.modal', function() {
-            document.getElementById('returnForm').reset(); // Reset the form inputs
-        });
-    });
-    </script>
-
-    <script>
-    $(document).on('click', '.btn-primary', function() {
-        var book_borrow_id = $(this).data('id');
-
-        // AJAX request to fetch the data and book list
-        $.ajax({
-            url: 'backend/fetch-book-borrow.php',
-            type: 'POST',
-            data: {
-                book_borrow_id: book_borrow_id
-            },
-            dataType: 'json',
-            success: function(data) {
-                console.log(data); // Debugging line
-                if (data.success) {
-                    // Clear previous values
-                    $('#edit_book_borrow_id').val(''); // Clear hidden input for book_borrow_id
-                    $('#edit_quantity').val(''); // Clear previous value for quantity
-
-                    // Set new values using the updated IDs
-                    $('#edit_book_borrow_id').val(data.record.book_borrow_id);
-                    $('#edit_student_name').val(data.record.student_name);
-                    $('#edit_grade_level').val(data.record.gradelevel);
-                    $('#edit_quantity').val(data.record.quantity);
-
-                    // Populate the book dropdown
-                    populateBookDropdown(data.books, data.record.book_id);
-
-                    // Show the modal
-                    console.log('Before modal show');
-                    $('#editModal').modal('show'); // Ensure the modal is displayed
-                    console.log('After modal show');
-                } else {
-                    alert(data.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-            }
-        });
-    });
-
-    // Function to populate book dropdown
-    function populateBookDropdown(books, selectedBookId) {
-        const $dropdown = $('#edit_book_title'); // Updated to new ID
-        $dropdown.empty(); // Clear existing options
-        $.each(books, function(index, book) {
-            $dropdown.append($('<option></option>').attr('value', book.book_id).text(book.title));
-        });
-        $dropdown.val(selectedBookId); // Set selected book
-
-        // Initialize Select2 for the dropdown if you're using it
-        $dropdown.select2({
-            placeholder: "Select a book",
-            allowClear: true,
-        });
-    }
-
-
-    $(document).ready(function() {
-        // Handle the update button click event
-        $('#updateButton').on('click', function() {
-            console.log("Update button clicked");
-
-            // Serialize the form data
-            var formData = $('#updateForm').serialize();
-            console.log("Form data:", formData);
-
-            // AJAX call to update the record
-            $.ajax({
-                type: 'POST',
-                url: 'backend/update-book-borrow.php', // Path to your PHP script
-                data: formData,
-                success: function(response) {
-                    console.log("AJAX response:",
-                        response); // Log the response for debugging
-                    var result = JSON.parse(response); // Parse the JSON response
-
-                    if (result.success) {
-                        Swal.fire("Updated!", result.message, "success").then(() => {
-                            // Refresh the page to see the changes
-                            location.reload(); // This will reload the entire page
-                        });
-                    } else {
-                        Swal.fire("Error!", result.message,
-                            "error"); // Display error message
-                    }
-                },
-                error: function(xhr) {
-                    console.error("AJAX error occurred:", xhr
-                        .responseText); // Log any error response
-                    Swal.fire("Error!", 'Error updating record. Please try again.',
-                        "error"); // Display error alert
-                }
-            });
-        });
     });
     </script>
 

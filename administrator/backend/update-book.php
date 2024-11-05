@@ -12,13 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $location = $_POST['location'];
     $copies = $_POST['copies'];
     $category_id = $_POST['category_id']; // Get the category_id from the form
+    $amount = $_POST['amount']; // Get the amount from the form
 
-    // Modify the query to include category_id
-    $query = "UPDATE book SET title = ?, author = ?, isbn = ?, publisher = ?, publication_year = ?, location = ?, copies = ?, category_id = ? WHERE book_id = ?";
+    // Modify the query to include amount and category_id
+    $query = "UPDATE book SET title = ?, author = ?, isbn = ?, publisher = ?, publication_year = ?, location = ?, copies = ?, category_id = ?, amount = ? WHERE book_id = ?";
     $stmt = $con->prepare($query);
     
-    // Update the bind_param to include category_id
-    $stmt->bind_param("ssssssiii", $title, $author, $isbn, $publisher, $publication_year, $location, $copies, $category_id, $id);
+    // Update the bind_param to include amount
+    $stmt->bind_param("ssssssiids", $title, $author, $isbn, $publisher, $publication_year, $location, $copies, $category_id, $amount, $id);
 
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'Book updated successfully!']);

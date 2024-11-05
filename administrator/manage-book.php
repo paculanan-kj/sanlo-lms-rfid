@@ -52,7 +52,7 @@ session_start();
             <h1>Books</h1>
             <nav>
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="index.php"><i class="bi bi-house-door"></i></a></li>                    
+                    <li class="breadcrumb-item"><a href="index.php"><i class="bi bi-house-door"></i></a></li>
                     <li class="breadcrumb-item active">Books</li>
                     <li class="breadcrumb-item active">Manage Books</li>
                 </ol>
@@ -82,6 +82,7 @@ session_start();
                                         <th style="display: none;">Publication Year</th>
                                         <th style="display: none;">Location</th>
                                         <th>Copies</th>
+                                        <th style="display: none;">Amount</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -115,6 +116,7 @@ session_start();
                                           
                                           // Display copies as a badge
                                           echo "<td><span class='badge bg-warning text-dark'>" . htmlspecialchars($row['copies']) . "</span></td>";
+                                          echo "<td style='display: none;'>₱" . number_format($row['amount'], 2) . "</td>";
                                           
                                           echo "<td>
                                               <button 
@@ -163,26 +165,26 @@ session_start();
                                         <select class="form-select" id="category" name="category_id" required>
                                             <option value="">Select Category</option>
                                             <?php
-                                          include 'backend/dbcon.php'; // Include your DB connection script
+                                    include 'backend/dbcon.php'; // Include your DB connection script
 
-                                          // Fetch categories from the database
-                                          $query = "SELECT category_id, category_name FROM categories ORDER BY category_name ASC";
-                                          $result = $con->query($query);
+                                    // Fetch categories from the database
+                                    $query = "SELECT category_id, category_name FROM book_categories ORDER BY category_name ASC";
+                                    $result = $con->query($query);
 
-                                          if ($result->num_rows > 0) {
-                                            while ($row = $result->fetch_assoc()) {
-                                              echo "<option value='" . $row['category_id'] . "'>" . htmlspecialchars($row['category_name']) . "</option>";
-                                            }
-                                          } else {
-                                            echo "<option value=''>No categories available</option>";
-                                          }
-                                          $con->close();
-                                        ?>
+                                    if ($result->num_rows > 0) {
+                                        while ($row = $result->fetch_assoc()) {
+                                            echo "<option value='" . $row['category_id'] . "'>" . htmlspecialchars($row['category_name']) . "</option>";
+                                        }
+                                    } else {
+                                        echo "<option value=''>No categories available</option>";
+                                    }
+                                    $con->close();
+                                    ?>
                                         </select>
                                     </div>
 
                                     <!-- Hidden field to display selected category_id -->
-                                    <input type="text" id="selectedCategoryId" name="selected_category_id" value="">
+                                    <input type="hidden" id="selectedCategoryId" name="selected_category_id" value="">
 
                                     <div class="mb-3">
                                         <label for="book-title" class="form-label">Book Title</label>
@@ -214,6 +216,12 @@ session_start();
                                     <div class="mb-3">
                                         <label for="copies" class="form-label">Number of Copies</label>
                                         <input type="number" class="form-control" id="copies" name="copies" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="amount" class="form-label">Amount</label>
+                                        <input type="number" class="form-control" id="amount" name="amount" step="0.01"
+                                            required>
+                                        <div class="form-text">Enter the price of the book.</div>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -294,6 +302,10 @@ session_start();
                                 <label for="update-copies" class="form-label">Number of Copies</label>
                                 <input type="number" class="form-control" id="update-copies" name="copies" required>
                             </div>
+                            <div class="mb-3">
+                                <label for="update-amount" class="form-label">Amount</label>
+                                <input type="number" class="form-control" id="update-amount" name="amount" required>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -303,7 +315,6 @@ session_start();
                 </div>
             </div>
         </form>
-
 
     </main><!-- End #main -->
 
@@ -441,25 +452,27 @@ session_start();
     // Populate the update modal with book data
     const updateBookModal = document.getElementById('updatebook');
     updateBookModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget; // Button that triggered the modal
-        const bookId = button.getAttribute('data-id');
-        const categoryId = button.getAttribute('data-category-id');
-        const categoryName = button.getAttribute('data-category-name'); // Get the category name
+    const button = event.relatedTarget; // Button that triggered the modal
+    const bookId = button.getAttribute('data-id');
+    const categoryId = button.getAttribute('data-category-id');
+    const categoryName = button.getAttribute('data-category-name'); // Get the category name
 
-        // Get the row to extract other book details
-        const row = button.closest('tr');
+    // Get the row to extract other book details
+    const row = button.closest('tr');
 
-        // Set the values in the modal input fields
-        document.getElementById('book-id').value = bookId;
-        document.getElementById('update-category').value = categoryId; // Set the selected category ID
-        document.getElementById('update-book-title').value = row.children[1]
-            .textContent; // Assuming title is in the second cell
-        document.getElementById('update-author').value = row.children[2].textContent;
-        document.getElementById('update-isbn').value = row.children[3].textContent;
-        document.getElementById('update-publisher').value = row.children[4].textContent;
-        document.getElementById('update-publication-year').value = row.children[5].textContent;
-        document.getElementById('update-location').value = row.children[6].textContent;
-        document.getElementById('update-copies').value = row.children[7].textContent; // Adjust index if needed
+    // Set the values in the modal input fields
+    document.getElementById('book-id').value = bookId;
+    document.getElementById('update-category').value = categoryId; // Set the selected category ID
+    document.getElementById('update-book-title').value = row.children[1]
+        .textContent; // Assuming title is in the second cell
+    document.getElementById('update-author').value = row.children[2].textContent;
+    document.getElementById('update-isbn').value = row.children[3].textContent;
+    document.getElementById('update-publisher').value = row.children[4].textContent;
+    document.getElementById('update-publication-year').value = row.children[5].textContent;
+    document.getElementById('update-location').value = row.children[6].textContent;
+    document.getElementById('update-copies').value = row.children[7].textContent;
+    document.getElementById('update-amount').value = row.children[8].textContent.replace(/₱|,/g, '')
+    .trim(); // Amount (remove currency symbol and format)
     });
     </script>
 

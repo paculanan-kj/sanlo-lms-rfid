@@ -16,15 +16,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $publication_year = $_POST['publication_year'];
     $location = $_POST['location'];
     $copies = $_POST['copies'];
+    $amount = $_POST['amount']; // Capture the amount
     $user_id = $_SESSION['user_id'];
 
     // Prepare the SQL insertion query
-    $query = "INSERT INTO book (title, author, isbn, publisher, publication_year, location, copies, user_id, category_id, added_at) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    $query = "INSERT INTO book (user_id, category_id, title, author, isbn, publisher, publication_year, location, amount,  copies, added_at) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
     if ($stmt = $con->prepare($query)) {
         // Bind parameters
-        $stmt->bind_param("ssssssiii", $book_title, $author, $isbn, $publisher, $publication_year, $location, $copies, $user_id, $category_id);
+        $stmt->bind_param("iissssssdi", $user_id, $category_id, $book_title, $author, $isbn, $publisher, $publication_year, $location, $amount, $copies);
 
         if ($stmt->execute()) {
             echo json_encode(["status" => "success", "message" => "Book added successfully!"]);

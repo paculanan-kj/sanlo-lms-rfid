@@ -178,8 +178,8 @@ session_start();
                 if (data.success) {
                     const bookDetails = document.createElement('div');
                     bookDetails.classList.add('alert', 'alert-info');
-                    bookDetails.innerHTML = `<strong>Title:</strong> ${data.book.title}<br>
-                                     <strong>Location:</strong> ${data.book.location}`;
+                    bookDetails.innerHTML = `<h2>Title: ${data.book.title}</h2> <br>
+                                     <h2>Location: ${data.book.location}</h2> `;
                     resultsDiv.appendChild(bookDetails);
                 } else {
                     resultsDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
