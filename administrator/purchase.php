@@ -115,15 +115,28 @@ include 'backend/dbcon.php';
                 <div class="modal-content">
                     <form id="addBookBorrowForm">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="borrowModalLabel">Borrow Book</h5>
+                            <h5 class="modal-title" id="borrowModalLabel">Purchase Book</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <!-- Profile Picture Row -->
-                            <div class="row justify-content-center">
-                                <div class="col-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <!-- Student Details on the Left -->
+                                <div style="flex: 1;">
+                                    <div class="mb-3">
+                                        <label for="studentName" class="form-label">Name</label>
+                                        <input type="text" class="form-control" id="studentName" name="student_name"
+                                            required readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="gradeLevel" class="form-label">Grade Level</label>
+                                        <input type="text" class="form-control" id="gradeLevel" name="grade_level"
+                                            required readonly>
+                                    </div>
+                                </div>
+                                <!-- Profile Picture on the Right -->
+                                <div class="col-auto" style="margin-left: 70px;">
                                     <img id="profilePicture" src="" alt="Profile Picture"
-                                        class="img-fluid rounded-circle"
+                                        class="img-fluid rounded-circle me-5"
                                         style="display:none; height: 160px; width: 160px;">
                                     <input type="hidden" class="form-control" id="profilePictureInput"
                                         name="profile_picture">
@@ -133,24 +146,8 @@ include 'backend/dbcon.php';
                             <div class="row">
                                 <div class="col-6">
                                     <div class="mb-3">
-                                        <label for="studentName" class="form-label">Name</label>
-                                        <input type="text" class="form-control" id="studentName" name="student_name"
-                                            required readonly>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label for="gradeLevel" class="form-label">Grade Level</label>
-                                        <input type="text" class="form-control" id="gradeLevel" name="grade_level"
-                                            required readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mt-1">
-                                <div class="col-6">
-                                    <div class="mb-3">
                                         <label for="BorrowBook" class="form-label">Book</label>
-                                        <input type="text" class="form-control" id="BorrowBook" name="book" required>
+                                        <input type="text" class="form-control" id="BorrowBook" name="book">
                                         <div id="bookSuggestions" class="suggestions-container"
                                             style="border: 1px solid #ccc; display: none;"></div>
                                     </div>
@@ -158,13 +155,47 @@ include 'backend/dbcon.php';
                                 <div class="col-6">
                                     <div class="mb-3">
                                         <label for="bookQuantity" class="form-label">Quantity</label>
-                                        <input type="number" class="form-control" id="bookQuantity" name="quantity"
-                                            required>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="bookQuantity" name="quantity">
+                                            <button type="button" class="btn btn-success"
+                                                id="calculateAmountBtn">Calculate</button>
+                                        </div>
                                     </div>
                                 </div>
-                                <input type="hidden" class="form-control" id="studentId" name="student_id" required
+                                <input type="text" class="form-control" id="studentId" name="student_id" required
                                     readonly>
-                                <input type="hidden" id="bookId" name="book_id">
+                                <input type="text" id="bookId" name="book_id">
+                                <input type="text" id="bookPrice" name="price" value="100">
+                                <!-- Replace with actual price logic -->
+                            </div>
+                            <div class="mb-3">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Book</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bookListBody">
+                                        <!-- Selected books will be appended here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mb-3">
+                                <label for="totalAmount" class="form-label">Total Amount</label>
+                                <input type="text" class="form-control" id="totalAmount" name="total_amount" required
+                                    readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="moneyReceived" class="form-label">Money Received</label>
+                                <input type="number" class="form-control" id="moneyReceived" name="money_received"
+                                    required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="change" class="form-label">Change</label>
+                                <input type="text" class="form-control" id="change" name="change" required readonly>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -175,83 +206,6 @@ include 'backend/dbcon.php';
                 </div>
             </div>
         </div>
-
-        <!-- Return Book Modal -->
-        <div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="returnModalLabel">Return Book</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="returnForm">
-                            <input type="hidden" id="book_borrow_id" name="book_borrow_id" value="">
-                            <div class="mb-3">
-                                <label for="quantity" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="quantity" name="quantity" min="1"
-                                    required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status" required>
-                                    <option value="returned">Returned</option>
-                                    <option value="damaged">Damaged</option>
-                                    <option value="lost">Lost</option>
-                                </select>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="submitReturn">Submit Return</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- End Return Book Modal -->
-
-        <!-- Update Modal -->
-        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Update Borrowed Book</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="updateForm">
-                            <input type="hidden" id="edit_book_borrow_id" name="book_borrow_id">
-                            <!-- Use hidden input -->
-                            <div class="mb-3">
-                                <label for="student_name" class="form-label">Student Name</label>
-                                <input type="text" class="form-control" id="edit_student_name" name="student_name"
-                                    readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label for="grade_level" class="form-label">Grade Level</label>
-                                <input type="text" class="form-control" id="edit_grade_level" name="grade_level"
-                                    readonly>
-                            </div>
-                            <div class="mb-3">
-                                <label for="book_title" class="form-label">Book Title</label>
-                                <select class="form-select" id="edit_book_title" name="book_title"></select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="quantity" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="edit_quantity" name="quantity" required>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="updateButton">Update</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
 
 
     </main><!-- End #main -->
@@ -439,6 +393,51 @@ include 'backend/dbcon.php';
                 }, 300);
             }
         }
+    });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const bookListBody = document.getElementById('bookListBody');
+        const totalAmountInput = document.getElementById('totalAmount');
+        const moneyReceivedInput = document.getElementById('moneyReceived');
+        const changeInput = document.getElementById('change');
+        const bookPrice = parseFloat(document.getElementById('bookPrice').value); // Price of the selected book
+        let totalAmount = 0;
+
+        // Calculate total amount based on quantity
+        document.getElementById('calculateAmountBtn').addEventListener('click', () => {
+            const quantity = parseInt(document.getElementById('bookQuantity').value);
+            if (quantity > 0) {
+                const total = quantity * bookPrice;
+                const bookName = document.getElementById('BorrowBook').value;
+
+                // Append book to the list
+                const row = `<tr>
+                            <td>${bookName}</td>
+                            <td>${quantity}</td>
+                            <td>${bookPrice.toFixed(2)}</td>
+                            <td>${total.toFixed(2)}</td>
+                        </tr>`;
+                bookListBody.insertAdjacentHTML('beforeend', row);
+
+                // Update total amount
+                totalAmount += total;
+                totalAmountInput.value = totalAmount.toFixed(2);
+
+                // Reset inputs
+                document.getElementById('bookQuantity').value = '';
+            } else {
+                alert('Please enter a valid quantity.');
+            }
+        });
+
+        // Calculate change on money received input
+        moneyReceivedInput.addEventListener('input', () => {
+            const moneyReceived = parseFloat(moneyReceivedInput.value);
+            const change = moneyReceived - totalAmount;
+            changeInput.value = change >= 0 ? change.toFixed(2) : '';
+        });
     });
     </script>
 
