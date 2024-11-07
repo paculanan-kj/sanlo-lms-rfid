@@ -114,32 +114,13 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
             </ul>
         </li>
 
-        <!-- Purchased Books Dropdown -->
         <li class="nav-item">
-            <a class="nav-link collapsed <?php echo ($current_page == 'purchased-books.php') ? 'active' : ''; ?>"
-                data-bs-target="#purchasedBooks-nav" data-bs-toggle="collapse" href="#">
+            <a class="nav-link <?php echo ($current_page == 'purchased-books.php') ? 'active' : ''; ?>"
+                href="purchased-books.php?user_id=<?php echo $user_id; ?>">
                 <i class="bx bx-book"></i>
-                <span>Purchased Books</span>
-                <i class="bi bi-chevron-down ms-auto"></i>
+                <span>Purchase Book</span>
             </a>
-            <ul id="purchasedBooks-nav"
-                class="nav-content collapse <?php echo ($current_page == 'purchased-books.php' || $current_page == 'purchase.php') ? 'show' : ''; ?>"
-                data-bs-parent="#sidebar-nav">
-                <li>
-                    <a href="purchase.php?user_id=<?php echo $user_id; ?>"
-                        class="<?php echo ($current_page == 'purchase.php') ? 'active' : ''; ?>">
-                        <i class="bi bi-circle"></i><span>Purchase</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="purchased-books.php?user_id=<?php echo $user_id; ?>"
-                        class="<?php echo ($current_page == 'purchased-books.php') ? 'active' : ''; ?>">
-                        <i class="bi bi-circle"></i><span>View Purchased</span>
-                    </a>
-                </li>
-            </ul>
         </li>
-
 
         <!-- Reports Section -->
         <li class="nav-item">

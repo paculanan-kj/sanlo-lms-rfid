@@ -74,11 +74,11 @@ include 'backend/dbcon.php';
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Purchased Books</h1>
+            <h1>Purchase Books</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
-                    <li class="breadcrumb-item">Purchased Books</li>
+                    <li class="breadcrumb-item">Purchase Books</li>
                     <li class="breadcrumb-item active">Purchase</li>
                 </ol>
             </nav>

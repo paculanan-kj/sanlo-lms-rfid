@@ -49,12 +49,11 @@ session_start();
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Books</h1>
+            <h1>Purchase Book</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="index.php"><i class="bi bi-house-door"></i></a></li>                    
-                    <li class="breadcrumb-item active">Books</li>
-                    <li class="breadcrumb-item active">Manage Books</li>
+                    <li class="breadcrumb-item active">Purchase Book</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -68,7 +67,7 @@ session_start();
                                 <h5 class="card-title">Books</h5>
                                 <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal"
                                     data-bs-target="#addbook">
-                                    <i class="bx bx-plus"></i> Add Book
+                                    <i class="bx bx-plus me-1"></i>Purchase
                                 </button>
                             </div>
                             <table class="table datatable">
