@@ -47,12 +47,12 @@ include 'backend/dbcon.php';
     <main id="main" class="main">
 
         <div class="pagetitle">
-            <h1>Dashboard</h1>
+            <h1>Returned</h1>
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
-                    <li class="breadcrumb-item">Borrow Books</li>
-                    <li class="breadcrumb-item active">Returned Books</li>
+                    <li class="breadcrumb-item">Borrow Equipment</li>
+                    <li class="breadcrumb-item active">Returned</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->

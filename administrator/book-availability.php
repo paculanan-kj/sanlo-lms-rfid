@@ -78,48 +78,48 @@ session_start();
                                 </thead>
                                 <tbody>
                                     <?php
-require('backend/dbcon.php'); // Ensure this file contains your database connection logic
+                                        require('backend/dbcon.php'); // Ensure this file contains your database connection logic
 
-// Query to fetch all books with their associated category names and borrowed count
-$query = "
-    SELECT b.*, c.category_id, c.category_name, 
-    COALESCE(SUM(bb.quantity), 0) AS borrowed_count
-    FROM book b
-    LEFT JOIN book_categories c ON b.category_id = c.category_id
-    LEFT JOIN book_borrow bb ON b.book_id = bb.book_id AND bb.status = 'borrowed' 
-    GROUP BY b.book_id, c.category_id
-";
+                                        // Query to fetch all books with their associated category names and borrowed count
+                                        $query = "
+                                            SELECT b.*, c.category_id, c.category_name, 
+                                            COALESCE(SUM(bb.quantity), 0) AS borrowed_count
+                                            FROM book b
+                                            LEFT JOIN book_categories c ON b.category_id = c.category_id
+                                            LEFT JOIN book_borrow bb ON b.book_id = bb.book_id AND bb.status = 'borrowed' 
+                                            GROUP BY b.book_id, c.category_id
+                                        ";
 
-$result = $con->query($query);
+                                        $result = $con->query($query);
 
-// Check for errors
-if ($result === false) {
-    die("Error fetching data: " . $con->error);
-}
+                                        // Check for errors
+                                        if ($result === false) {
+                                            die("Error fetching data: " . $con->error);
+                                        }
 
-// Fetch and display each book
-while ($row = $result->fetch_assoc()) {
-    $totalCopies = (int)$row['copies'];
-    $borrowedCount = (int)$row['borrowed_count'];
-    $availableCount = $totalCopies - $borrowedCount;
+                                        // Fetch and display each book
+                                        while ($row = $result->fetch_assoc()) {
+                                            $totalCopies = (int)$row['copies'];
+                                            $borrowedCount = (int)$row['borrowed_count'];
+                                            $availableCount = $totalCopies - $borrowedCount;
 
-    // Determine status based on available copies and set badge classes
-    if ($availableCount > 0) {
-        $status = 'Available';
-        $badgeClass = 'bg-success'; // Green badge for available
-    } else {
-        $status = 'Unavailable';
-        $badgeClass = 'bg-danger'; // Red badge for unavailable
-    }
+                                            // Determine status based on available copies and set badge classes
+                                            if ($availableCount > 0) {
+                                                $status = 'Available';
+                                                $badgeClass = 'bg-success'; // Green badge for available
+                                            } else {
+                                                $status = 'Unavailable';
+                                                $badgeClass = 'bg-danger'; // Red badge for unavailable
+                                            }
 
-    echo "<tr>";
-    echo "<td>" . htmlspecialchars($row['category_name']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['title']) . "</td>";
-    echo "<td><span class='badge bg-warning text-dark'>" . $availableCount . "</span></td>";
-    echo "<td><span class='badge " . $badgeClass . " text-light'>" . htmlspecialchars($status) . "</span></td>";
-    echo "</tr>";
-}
-?>
+                                            echo "<tr>";
+                                            echo "<td>" . htmlspecialchars($row['category_name']) . "</td>";
+                                            echo "<td>" . htmlspecialchars($row['title']) . "</td>";
+                                            echo "<td><span class='badge bg-warning text-dark'>" . $availableCount . "</span></td>";
+                                            echo "<td><span class='badge " . $badgeClass . " text-light'>" . htmlspecialchars($status) . "</span></td>";
+                                            echo "</tr>";
+                                        }
+                                        ?>
 
                                 </tbody>
                             </table>
