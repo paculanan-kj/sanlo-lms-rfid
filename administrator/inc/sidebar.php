@@ -1,6 +1,5 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);  // Get the current page name
-$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
 ?>
 
 <!-- ======= Sidebar ======= -->

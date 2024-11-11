@@ -1,5 +1,6 @@
 <?php
 session_start();
+$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,43 +37,43 @@ session_start();
     <link href="assets/css/style.css" rel="stylesheet">
 
     <style>
-    .suggestions-container {
-        position: absolute;
-        /* Ensure it's positioned correctly */
-        background: white;
-        /* Background color for better visibility */
-        z-index: 1000;
-        /* Ensure it appears above other elements */
-        max-height: 200px;
-        /* Optional: Set max height */
-        overflow-y: auto;
-        /* Optional: Scrollable suggestions */
-    }
+        .suggestions-container {
+            position: absolute;
+            /* Ensure it's positioned correctly */
+            background: white;
+            /* Background color for better visibility */
+            z-index: 1000;
+            /* Ensure it appears above other elements */
+            max-height: 200px;
+            /* Optional: Set max height */
+            overflow-y: auto;
+            /* Optional: Scrollable suggestions */
+        }
 
-    .suggestion-item {
-        padding: 10px;
-        /* Add some padding */
-        cursor: pointer;
-        /* Change cursor to pointer */
-    }
+        .suggestion-item {
+            padding: 10px;
+            /* Add some padding */
+            cursor: pointer;
+            /* Change cursor to pointer */
+        }
 
-    .suggestion-item:hover {
-        background-color: #f0f0f0;
-        /* Highlight on hover */
-    }
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+            /* Highlight on hover */
+        }
     </style>
 </head>
 
 <body>
     <?php
-  include 'inc/navbar.php';
-  include 'inc/sidebar.php';
-  include 'backend/dbcon.php'; // Include your database connection
+    include 'inc/navbar.php';
+    include 'inc/sidebar.php';
+    include 'backend/dbcon.php'; // Include your database connection
 
-  // Query to fetch users from the database
-  $sql = "SELECT user_id, firstname, middlename, lastname, email, username FROM user";
-  $result = $con->query($sql);
-  ?>
+    // Query to fetch users from the database
+    $sql = "SELECT user_id, firstname, middlename, lastname, email, username FROM user";
+    $result = $con->query($sql);
+    ?>
     <main id="main" class="main">
 
         <div class="pagetitle">
@@ -100,27 +101,138 @@ session_start();
                             <table class="table datatable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 20%">Category</th>
-                                        <th style="width: 20%">Title</th>
-                                        <th style="width: 15%">Author</th>
-                                        <th>ISBN</th>
-                                        <th style="width: 15%">Publisher</th>
-                                        <th style="display: none;">Publication Year</th>
-                                        <th style="display: none;">Location</th>
-                                        <th>Copies</th>
+                                        <th style="width: 20%">Book</th>
+                                        <th>Student Name</th>
+                                        <th>Quantity</th>
+                                        <th>Total Amount</th>
+                                        <th>Money Paid</th>
+                                        <th>Change</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
+                                <?php
+                                require('backend/dbcon.php'); // Ensure this file contains your database connection logic
+
+                                // Ensure the user_id is set correctly before executing the query
+                                $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
+
+                                $query = "
+        SELECT 
+            pb.purchase_id, 
+            b.title,
+            pd.quantity, 
+            pb.total_amount, 
+            pb.cash AS student_money, 
+            pb.money_change, 
+            pb.created_at, 
+            CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name,  -- Combine first, middle, and last name
+            s.picture
+        FROM purchased_books pb 
+        LEFT JOIN purchase_details pd ON pb.purchase_id = pd.purchase_id
+        LEFT JOIN book b ON pd.book_id = b.book_id
+        LEFT JOIN book_categories c ON b.category_id = c.category_id
+        LEFT JOIN student s ON pb.student_id = s.student_id
+        WHERE pb.user_id = ?
+        ORDER BY pb.created_at DESC
+    ";
+
+                                // Prepare the query
+                                $stmt = $con->prepare($query);
+
+                                // Check if the statement was prepared successfully
+                                if ($stmt === false) {
+                                    die("Error preparing the SQL query: " . $con->error);
+                                }
+
+                                // Bind the parameters
+                                $stmt->bind_param("i", $user_id);
+
+                                // Execute the statement
+                                $stmt->execute();
+
+                                // Get the result
+                                $result = $stmt->get_result();
+
+                                if ($result === false) {
+                                    die("Error executing the query: " . $con->error);
+                                }
+                                ?>
+
                                 <tbody>
+                                    <?php
+                                    // Fetch and display each book purchase
+                                    while ($row = $result->fetch_assoc()) {
+                                        $picturePath = 'uploads/' . $row['picture'];
+                                        echo "<tr>";
+                                        echo "<td>" . htmlspecialchars($row['title']) . "</td>"; // Title
+                                        echo "<td>";
+                                        echo "<div class='d-flex align-items-center'>";
+                                        echo "<img src='" . htmlspecialchars($picturePath) . "' alt='Student Image' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
+                                        echo "<span>" . htmlspecialchars($row['student_name']) . "</span>";
+                                        echo "</div>";
+                                        echo "</td>";
+                                        echo "<td><span class='badge bg-warning text-dark'>" . htmlspecialchars($row['quantity']) . "</span></td>"; // Quantity
+                                        echo "<td>₱" . number_format($row['total_amount'], 2) . "</td>"; // Total Amount
+                                        echo "<td>₱" . number_format($row['student_money'], 2) . "</td>"; // Money Paid
+                                        echo "<td>₱" . number_format($row['money_change'], 2) . "</td>"; // Change
+
+                                        // Action Buttons: Edit and Delete
+                                        echo "<td>";
+                                        echo "<button class='btn btn-warning btn-sm' onclick='editPurchase(" . $row['purchase_id'] . ")'>Edit</button> ";
+                                        echo "<button class='btn btn-danger btn-sm' onclick='deletePurchase(" . $row['purchase_id'] . ")'>Delete</button>";
+                                        echo "</td>";
+
+                                        echo "</tr>";
+                                    }
+                                    ?>
                                 </tbody>
                             </table>
+
+                            <script>
+                                // Edit Purchase function (you can modify this to show an edit form or open a modal)
+                                function editPurchase(purchaseId) {
+                                    alert('Edit Purchase ID: ' + purchaseId);
+                                    // Here you can implement your logic to load the edit form or open a modal
+                                }
+
+                                // Delete Purchase function (you can implement AJAX to delete the record)
+                                function deletePurchase(purchaseId) {
+                                    if (confirm('Are you sure you want to delete this purchase?')) {
+                                        // Make an AJAX call to delete the purchase from the database
+                                        fetch('backend/delete-purchase.php', {
+                                                method: 'POST',
+                                                body: JSON.stringify({
+                                                    purchase_id: purchaseId
+                                                }),
+                                                headers: {
+                                                    'Content-Type': 'application/json'
+                                                }
+                                            })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.status === 'success') {
+                                                    alert('Purchase deleted successfully');
+                                                    u location.reload(); // Reload the page after deletion
+                                                } else {
+                                                    alert('Error deleting purchase');
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Error:', error);
+                                                alert('An error occurred while deleting the purchase');
+                                            });
+                                    }
+                                }
+                            </script>
+
+
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Add Book Borrow Modal -->
+        <!-- Add Book Purchase Modal -->
         <div class="modal fade" id="borrowModal" tabindex="-1" aria-labelledby="borrowModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
@@ -161,7 +273,7 @@ session_start();
                                 <div class="col-6">
                                     <div class="mb-3">
                                         <label for="BorrowBook" class="form-label">Book</label>
-                                        <input type="text" class="form-control" id="BorrowBook" name="book" required>
+                                        <input type="text" class="form-control" id="BorrowBook" name="book">
                                         <div id="bookSuggestions" class="suggestions-container"
                                             style="border: 1px solid #ccc; display: none;"></div>
                                     </div>
@@ -170,60 +282,61 @@ session_start();
                                     <div class="mb-3">
                                         <label for="bookQuantity" class="form-label">Quantity</label>
                                         <div class="input-group">
-                                            <input type="number" class="form-control" id="bookQuantity" name="quantity"
-                                                required>
+                                            <input type="number" class="form-control" id="bookQuantity" name="quantity">
                                             <button type="button" class="btn btn-success btn-sm" id="addBookBtn">
                                                 <i class="bx bx-plus"></i> Add
                                             </button>
-
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Hidden input to store book amount -->
-                            <input type="hidden" id="bookId" name="book_id" value="some_book_id">
-
-
                             <!-- Visible area to display the amount -->
                             <div id="displayAmount" class="mt-2"></div>
 
-                            <!-- Table to display selected books -->
-                            <div class="mt-3">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Book Title</th>
-                                            <th>Quantity</th>
-                                            <th>Amount</th>
-                                            
-                                        </tr>
-                                    </thead>
-                                    <tbody id="bookList">
-                                        <!-- Dynamic rows will appear here -->
-                                    </tbody>
-                                </table>
+                            <!-- Table to display selected books and "Student's Money" input fields -->
+                            <div id="bookDetailsSection" style="display: none;">
+                                <!-- Table to display selected books -->
+                                <div class="mt-3">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Book Title</th>
+                                                <th>Quantity</th>
+                                                <th>Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="bookList">
+                                            <!-- Dynamic rows will appear here -->
+                                        </tbody>
+                                    </table>
+                                    <div class="text-right">
+                                        <strong>Total Amount: </strong><span id="totalAmount">0</span>
+                                    </div>
+                                </div>
 
-                                <div class="text-right">
-                                    <strong>Total Amount: </strong><span id="totalAmount">0</span>
+                                <!-- Student's Money Amount Input -->
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <label for="studentMoney" class="form-label">Student's Money</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="number" class="form-control" id="studentMoney" name="student_money" required min="0" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="changeAmount" class="form-label">Change</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input type="text" class="form-control" id="changeAmount" name="change" readonly>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Student's Money Amount Input -->
-                            <div class="row mt-3">
-                                <div class="col-6">
-                                    <label for="studentMoney" class="form-label">Student's Money</label>
-                                    <input type="number" class="form-control" id="studentMoney" name="student_money"
-                                        required>
-                                </div>
-                                <div class="col-6">
-                                    <label for="changeAmount" class="form-label">Change</label>
-                                    <input type="text" class="form-control" id="changeAmount" name="change" readonly>
-                                </div>
-                            </div>
+                            <input type="hidden" id="userId" name="user_id">
 
-                            <input type="hidden" class="form-control" id="studentId" name="student_id" required
-                                readonly>
+                            <input type="hidden" class="form-control" id="studentId" name="student_id" required readonly>
                             <input type="hidden" id="bookId" name="book_id">
                         </div>
                         <div class="modal-footer">
@@ -234,8 +347,6 @@ session_start();
                 </div>
             </div>
         </div>
-
-
 
     </main><!-- End #main -->
 
@@ -253,254 +364,259 @@ session_start();
     <script src="assets/js/jquery.min.js"></script>
 
     <script>
-    // Automatically focus RFID input field when the modal is shown
-    document.addEventListener('DOMContentLoaded', function() {
-        const borrowModal = document.getElementById('borrowModal');
-        const inputRfid = document.getElementById('inputRfid');
+        // Automatically focus RFID input field when the modal is shown
+        document.addEventListener('DOMContentLoaded', function() {
+            const borrowModal = document.getElementById('borrowModal');
+            const inputRfid = document.getElementById('inputRfid');
 
-        borrowModal.addEventListener('shown.bs.modal', function() {
-            inputRfid.focus();
+            borrowModal.addEventListener('shown.bs.modal', function() {
+                inputRfid.focus();
+            });
         });
-    });
-    document.getElementById('inputRfid').addEventListener('input', function() {
-        const profilePicture = document.getElementById('profilePicture');
+        document.getElementById('inputRfid').addEventListener('input', function() {
+            const profilePicture = document.getElementById('profilePicture');
 
-        // Assuming the RFID scan populates other fields, we show the profile picture.
-        if (this.value) {
-            profilePicture.style.display = 'block'; // Show the profile picture
-        } else {
-            profilePicture.style.display = 'none'; // Hide if RFID input is cleared
-        }
-    });
+            // Assuming the RFID scan populates other fields, we show the profile picture.
+            if (this.value) {
+                profilePicture.style.display = 'block'; // Show the profile picture
+            } else {
+                profilePicture.style.display = 'none'; // Hide if RFID input is cleared
+            }
+        });
     </script>
 
     <script>
-    document.getElementById('BorrowBook').addEventListener('input', function() {
-        const searchTerm = this.value;
+        document.getElementById('BorrowBook').addEventListener('input', function() {
+            const searchTerm = this.value;
 
-        // Check if the input is not empty
-        if (searchTerm.length > 2) { // Trigger after 2 characters
-            fetch(`backend/fetch-books.php?term=${encodeURIComponent(searchTerm)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const suggestionsContainer = document.getElementById('bookSuggestions');
-                    suggestionsContainer.innerHTML = ''; // Clear previous suggestions
-                    suggestionsContainer.style.display = data.length ? 'block' :
-                        'none'; // Show or hide the suggestions container
+            // Check if the input is not empty
+            if (searchTerm.length > 2) { // Trigger after 2 characters
+                fetch(`backend/fetch-books.php?term=${encodeURIComponent(searchTerm)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const suggestionsContainer = document.getElementById('bookSuggestions');
+                        suggestionsContainer.innerHTML = ''; // Clear previous suggestions
+                        suggestionsContainer.style.display = data.length ? 'block' :
+                            'none'; // Show or hide the suggestions container
 
-                    if (data.length > 0) {
-                        data.forEach(book => {
-                            const suggestionItem = document.createElement('div');
-                            suggestionItem.className = 'suggestion-item';
-                            suggestionItem.textContent = book.title; // Display book title
-                            suggestionItem.dataset.id = book.book_id; // Store the book id
+                        if (data.length > 0) {
+                            data.forEach(book => {
+                                const suggestionItem = document.createElement('div');
+                                suggestionItem.className = 'suggestion-item';
+                                suggestionItem.textContent = book.title; // Display book title
+                                suggestionItem.dataset.id = book.book_id; // Store the book id
 
-                            // Add click event to select the book
-                            suggestionItem.addEventListener('click', function() {
-                                console.log('Suggestion clicked:', this
-                                    .textContent); // Debug log
-                                document.getElementById('BorrowBook').value = this
-                                    .textContent; // Set input value
-                                document.getElementById('bookId').value = this.dataset
-                                    .id; // Store selected book ID
+                                // Add click event to select the book
+                                suggestionItem.addEventListener('click', function() {
+                                    console.log('Suggestion clicked:', this
+                                        .textContent); // Debug log
+                                    document.getElementById('BorrowBook').value = this
+                                        .textContent; // Set input value
+                                    document.getElementById('bookId').value = this.dataset
+                                        .id; // Store selected book ID
 
-                                // Clear and hide suggestions after selection
-                                suggestionsContainer.innerHTML = ''; // Clear suggestions
-                                suggestionsContainer.style.display =
-                                    'none'; // Hide suggestions after selection
+                                    // Clear and hide suggestions after selection
+                                    suggestionsContainer.innerHTML = ''; // Clear suggestions
+                                    suggestionsContainer.style.display =
+                                        'none'; // Hide suggestions after selection
+                                });
+
+                                suggestionsContainer.appendChild(suggestionItem);
                             });
+                        } else {
+                            suggestionsContainer.innerHTML = '<div>No books found</div>'; // No results
+                        }
+                    })
+                    .catch(error => console.error('Error fetching books:', error));
+            } else {
+                document.getElementById('bookSuggestions').style.display =
+                    'none'; // Hide suggestions if input is less than 3 characters
+            }
+        });
 
-                            suggestionsContainer.appendChild(suggestionItem);
-                        });
-                    } else {
-                        suggestionsContainer.innerHTML = '<div>No books found</div>'; // No results
-                    }
-                })
-                .catch(error => console.error('Error fetching books:', error));
-        } else {
-            document.getElementById('bookSuggestions').style.display =
-                'none'; // Hide suggestions if input is less than 3 characters
-        }
-    });
+        // Reset inputs when the modal is closed
+        const borrowModal = document.getElementById('borrowModal');
+        borrowModal.addEventListener('hidden.bs.modal', function() {
+            // Reset all input fields
+            document.getElementById('addBookBorrowForm').reset(); // Reset the form
+            document.getElementById('bookSuggestions').innerHTML = ''; // Clear suggestions
+            document.getElementById('bookSuggestions').style.display = 'none'; // Hide suggestions
 
-    // Reset inputs when the modal is closed
-    const borrowModal = document.getElementById('borrowModal');
-    borrowModal.addEventListener('hidden.bs.modal', function() {
-        // Reset all input fields
-        document.getElementById('addBookBorrowForm').reset(); // Reset the form
-        document.getElementById('bookSuggestions').innerHTML = ''; // Clear suggestions
-        document.getElementById('bookSuggestions').style.display = 'none'; // Hide suggestions
-
-        // Reset the profile picture
-        const profilePicture = document.getElementById('profilePicture');
-        profilePicture.src = ''; // Clear the image source
-        profilePicture.style.display = 'none'; // Hide the image
-    });
+            // Reset the profile picture
+            const profilePicture = document.getElementById('profilePicture');
+            profilePicture.src = ''; // Clear the image source
+            profilePicture.style.display = 'none'; // Hide the image
+        });
     </script>
 
     <script>
-    let rfidTimeout;
-    let rfidData = "";
+        let rfidTimeout;
+        let rfidData = "";
 
-    // Prevent form submission
-    document.getElementById('addBookBorrowForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission
-    });
+        // Prevent form submission
+        document.getElementById('addBookBorrowForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+        });
 
-    // Listen for keydown events to capture RFID input
-    document.addEventListener('keydown', function(event) {
-        const borrowModal = document.getElementById('borrowModal');
+        // Listen for keydown events to capture RFID input
+        document.addEventListener('keydown', function(event) {
+            const borrowModal = document.getElementById('borrowModal');
 
-        // Ensure input only captures when the modal is open
-        if (borrowModal.classList.contains('show')) {
-            // If Enter key is pressed, process the RFID data
-            if (event.key === 'Enter') {
-                clearTimeout(rfidTimeout); // Clear any existing timeout
+            // Ensure input only captures when the modal is open
+            if (borrowModal.classList.contains('show')) {
+                // If Enter key is pressed, process the RFID data
+                if (event.key === 'Enter') {
+                    clearTimeout(rfidTimeout); // Clear any existing timeout
 
-                const rfid = rfidData.trim();
-                if (rfid) {
-                    fetch('backend/fetch-student-borrow.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                rfid
-                            }),
-                        })
-                        .then((response) => response.json())
-                        .then((data) => {
-                            if (data.success) {
-                                const student = data.student;
-                                document.getElementById('studentId').value = student.student_id;
-                                document.getElementById('studentName').value = student.full_name;
-                                document.getElementById('gradeLevel').value = student.grade_level;
+                    const rfid = rfidData.trim();
+                    if (rfid) {
+                        fetch('backend/fetch-student-borrow.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    rfid
+                                }),
+                            })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (data.success) {
+                                    const student = data.student;
+                                    document.getElementById('studentId').value = student.student_id;
+                                    document.getElementById('studentName').value = student.full_name;
+                                    document.getElementById('gradeLevel').value = student.grade_level;
 
-                                // Set the image source and make it visible
-                                document.getElementById('profilePicture').src = student.profile_picture;
-                                document.getElementById('profilePicture').style.display = 'block';
+                                    // Set the image source and make it visible
+                                    document.getElementById('profilePicture').src = student.profile_picture;
+                                    document.getElementById('profilePicture').style.display = 'block';
 
-                                // Store the image path in a hidden input
-                                document.getElementById('profilePictureInput').value = student
-                                    .profile_picture;
-                            } else {
+                                    // Store the image path in a hidden input
+                                    document.getElementById('profilePictureInput').value = student
+                                        .profile_picture;
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Oops!',
+                                        text: data.message || 'Student not found.',
+                                    });
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('Error fetching student data:', error);
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Oops!',
-                                    text: data.message || 'Student not found.',
+                                    title: 'Error!',
+                                    text: 'An error occurred while fetching the student data.',
                                 });
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error fetching student data:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'An error occurred while fetching the student data.',
                             });
-                        });
+                    }
+
+                    rfidData = ""; // Clear rfidData for the next scan
+                } else {
+                    // Accumulate characters in rfidData
+                    rfidData += event.key;
+
+                    // Clear any previous timeout to debounce input
+                    clearTimeout(rfidTimeout);
+
+                    // Set a new timeout to clear rfidData if no activity occurs
+                    rfidTimeout = setTimeout(() => {
+                        rfidData = ""; // Clear the input if no Enter key is detected in 300 ms
+                    }, 300);
                 }
-
-                rfidData = ""; // Clear rfidData for the next scan
-            } else {
-                // Accumulate characters in rfidData
-                rfidData += event.key;
-
-                // Clear any previous timeout to debounce input
-                clearTimeout(rfidTimeout);
-
-                // Set a new timeout to clear rfidData if no activity occurs
-                rfidTimeout = setTimeout(() => {
-                    rfidData = ""; // Clear the input if no Enter key is detected in 300 ms
-                }, 300);
             }
-        }
-    });
+        });
     </script>
 
     <script>
-    // JavaScript for Book Purchase System
-    document.addEventListener('DOMContentLoaded', function() {
-        const borrowBookInput = document.getElementById("BorrowBook");
-        const bookIdInput = document.getElementById("bookId");
-        const bookSuggestions = document.getElementById("bookSuggestions");
-        const bookQuantityInput = document.getElementById("bookQuantity");
-        const addBookBtn = document.getElementById("addBookBtn");
-        const bookListTable = document.getElementById("bookList");
-        const totalAmountSpan = document.getElementById("totalAmount");
-        const studentMoneyInput = document.getElementById("studentMoney");
-        const changeAmountInput = document.getElementById("changeAmount");
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get user_id from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
 
-        let selectedBookAmount = 0;
-        let selectedBookId = null;
+            // Set user_id in the hidden input field if it exists
+            if (userId) {
+                document.getElementById('userId').value = userId;
+            }
 
-        // Function to fetch book suggestions
-        borrowBookInput.addEventListener("input", function() {
-            const searchTerm = this.value;
-            if (searchTerm.length >= 2) {
-                fetch(`backend/getBookSuggestions.php?term=${encodeURIComponent(searchTerm)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        bookSuggestions.innerHTML = '';
-                        bookSuggestions.style.display = 'block';
+            // Existing variables
+            const borrowBookInput = document.getElementById("BorrowBook");
+            const bookIdInput = document.getElementById("bookId");
+            const bookSuggestions = document.getElementById("bookSuggestions");
+            const bookQuantityInput = document.getElementById("bookQuantity");
+            const addBookBtn = document.getElementById("addBookBtn");
+            const bookListTable = document.getElementById("bookList");
+            const totalAmountSpan = document.getElementById("totalAmount");
+            const studentMoneyInput = document.getElementById("studentMoney");
+            const changeAmountInput = document.getElementById("changeAmount");
+            const bookDetailsSection = document.getElementById("bookDetailsSection");
 
-                        data.forEach(book => {
-                            const div = document.createElement('div');
-                            div.className =
-                                'suggestion-item p-2 hover:bg-gray-100 cursor-pointer';
-                            div.textContent = book.title;
-                            div.addEventListener('click', () => {
-                                borrowBookInput.value = book.title;
-                                selectedBookId = book.book_id;
-                                selectedBookAmount = parseFloat(book.amount);
-                                bookIdInput.value = book.book_id;
-                                bookSuggestions.style.display = 'none';
+            let selectedBookAmount = 0;
+            let selectedBookId = null;
 
-                                // Display the amount
-                                document.getElementById("displayAmount")
-                                    .textContent =
-                                    `Amount: ₱${selectedBookAmount.toFixed(2)}`;
+            // Fetch book suggestions
+            borrowBookInput.addEventListener("input", function() {
+                const searchTerm = this.value;
+                if (searchTerm.length >= 2) {
+                    fetch(`backend/getBookSuggestions.php?term=${encodeURIComponent(searchTerm)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            bookSuggestions.innerHTML = '';
+                            bookSuggestions.style.display = 'block';
+
+                            data.forEach(book => {
+                                const div = document.createElement('div');
+                                div.className = 'suggestion-item p-2 hover:bg-gray-100 cursor-pointer';
+                                div.textContent = book.title;
+                                div.addEventListener('click', () => {
+                                    borrowBookInput.value = book.title;
+                                    selectedBookId = book.book_id;
+                                    selectedBookAmount = parseFloat(book.amount);
+                                    bookIdInput.value = book.book_id;
+                                    bookSuggestions.style.display = 'none';
+
+                                    document.getElementById("displayAmount").textContent = `Amount: ₱${selectedBookAmount.toFixed(2)}`;
+                                });
+                                bookSuggestions.appendChild(div);
                             });
-                            bookSuggestions.appendChild(div);
-                        });
-                    })
-                    .catch(error => console.error("Error fetching suggestions:", error));
-            } else {
-                bookSuggestions.style.display = 'none';
-            }
-        });
+                        })
+                        .catch(error => console.error("Error fetching suggestions:", error));
+                } else {
+                    bookSuggestions.style.display = 'none';
+                }
+            });
 
-        // Function to update the change amount
-        function updateChange() {
-            const totalAmount = parseFloat(totalAmountSpan.textContent) || 0;
-            const studentMoney = parseFloat(studentMoneyInput.value) || 0;
-            const change = studentMoney - totalAmount;
-            changeAmountInput.value = change >= 0 ? `₱${change.toFixed(2)}` : "Insufficient funds";
-        }
-
-        // Add book to the list
-        addBookBtn.addEventListener("click", function() {
-            if (!selectedBookId || !borrowBookInput.value) {
-                alert("Please select a book from the suggestions");
-                return;
+            // Update the change amount
+            function updateChange() {
+                const totalAmount = parseFloat(totalAmountSpan.textContent) || 0;
+                const studentMoney = parseFloat(studentMoneyInput.value) || 0;
+                const change = studentMoney - totalAmount;
+                changeAmountInput.value = change >= 0 ? `₱${change.toFixed(2)}` : "Insufficient funds";
             }
 
-            const quantity = parseInt(bookQuantityInput.value);
-            if (isNaN(quantity) || quantity <= 0) {
-                alert("Please enter a valid quantity");
-                return;
-            }
+            // Add book to the list
+            addBookBtn.addEventListener("click", function() {
+                if (!selectedBookId || !borrowBookInput.value) {
+                    alert("Please select a book from the suggestions.");
+                    return;
+                }
 
-            const totalForBook = quantity * selectedBookAmount;
+                const quantity = parseInt(bookQuantityInput.value);
+                if (isNaN(quantity) || quantity <= 0) {
+                    alert("Please enter a valid quantity.");
+                    return;
+                }
 
-            // Add to table
-            const newRow = document.createElement("tr");
-            newRow.innerHTML = `
+                const totalForBook = quantity * selectedBookAmount;
+
+                const newRow = document.createElement("tr");
+                newRow.innerHTML = `
             <td>${borrowBookInput.value}</td>
             <td>${quantity}</td>
             <td>₱${totalForBook.toFixed(2)}</td>
@@ -510,45 +626,156 @@ session_start();
                 </button>
             </td>
         `;
-            bookListTable.appendChild(newRow);
+                bookListTable.appendChild(newRow);
 
-            // Update total amount
-            const currentTotal = parseFloat(totalAmountSpan.textContent) || 0;
-            totalAmountSpan.textContent = (currentTotal + totalForBook).toFixed(2);
+                bookDetailsSection.style.display = 'block';
+                const currentTotal = parseFloat(totalAmountSpan.textContent) || 0;
+                totalAmountSpan.textContent = (currentTotal + totalForBook).toFixed(2);
 
-            // Clear inputs
-            borrowBookInput.value = '';
-            bookQuantityInput.value = '';
-            document.getElementById("displayAmount").textContent = '';
-            selectedBookId = null;
-            selectedBookAmount = 0;
+                borrowBookInput.value = '';
+                bookQuantityInput.value = '';
+                document.getElementById("displayAmount").textContent = '';
+                selectedBookId = null;
+                selectedBookAmount = 0;
 
-            updateChange();
-        });
-
-        // Remove book from list
-        bookListTable.addEventListener('click', function(e) {
-            if (e.target.closest('.remove-book')) {
-                const row = e.target.closest('tr');
-                const amount = parseFloat(row.cells[2].textContent.replace('₱', ''));
-                const currentTotal = parseFloat(totalAmountSpan.textContent);
-                totalAmountSpan.textContent = (currentTotal - amount).toFixed(2);
-                row.remove();
                 updateChange();
-            }
-        });
+            });
 
-        // Update change when student money changes
-        studentMoneyInput.addEventListener("input", updateChange);
+            // Remove book from list
+            bookListTable.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-book')) {
+                    const row = e.target.closest('tr');
+                    const amount = parseFloat(row.cells[2].textContent.replace('₱', ''));
+                    const currentTotal = parseFloat(totalAmountSpan.textContent);
+                    totalAmountSpan.textContent = (currentTotal - amount).toFixed(2);
+                    row.remove();
+                    updateChange();
 
-        // Close suggestions when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!borrowBookInput.contains(e.target) && !bookSuggestions.contains(e.target)) {
-                bookSuggestions.style.display = 'none';
-            }
+                    if (!bookListTable.querySelector('tr')) {
+                        bookDetailsSection.style.display = 'none';
+                    }
+                }
+            });
+
+            studentMoneyInput.addEventListener("input", updateChange);
+
+            document.addEventListener('click', function(e) {
+                if (!borrowBookInput.contains(e.target) && !bookSuggestions.contains(e.target)) {
+                    bookSuggestions.style.display = 'none';
+                }
+            });
+
+            // Form Submission Handling
+            const form = document.getElementById('addBookBorrowForm');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                formData.append('total_amount', totalAmountSpan.textContent);
+                formData.append('change', changeAmountInput.value);
+
+                fetch('backend/insert-purchase-book.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "error") {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Stock Alert",
+                                text: data.message
+                            });
+                        } else if (data.status === "success") {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success",
+                                text: data.message
+                            });
+                            form.reset();
+                            bookListTable.innerHTML = '';
+                            totalAmountSpan.textContent = '0';
+                            bookDetailsSection.style.display = 'none';
+                        }
+                    })
+                    .catch(error => console.error("Error submitting form:", error));
+            });
         });
-    });
     </script>
+    <script>
+        // Form Submission Handling
+        const form = document.getElementById('addBookBorrowForm');
+        const totalAmountSpan = document.getElementById('totalAmount');
+        const changeAmountInput = document.getElementById('changeAmount');
+        const bookListTable = document.getElementById('bookList');
+        const bookDetailsSection = document.getElementById('bookDetailsSection');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Collect all book rows data
+            const bookRows = [];
+            document.querySelectorAll('#bookList tr').forEach(row => {
+                bookRows.push({
+                    title: row.cells[0].textContent,
+                    quantity: parseInt(row.cells[1].textContent),
+                    amount: parseFloat(row.cells[2].textContent.replace('₱', ''))
+                });
+            });
+
+            // Log data for debugging
+            console.log('Book Rows:', bookRows);
+            console.log('Total Amount:', totalAmountSpan.textContent);
+            console.log('Change:', changeAmountInput.value);
+
+            const formData = new FormData(form);
+            formData.append('bookRows', JSON.stringify(bookRows));
+            formData.append('total_amount', totalAmountSpan.textContent);
+            formData.append('change', changeAmountInput.value.replace('₱', ''));
+
+            // Send data to PHP script
+            fetch('backend/insert-purchase-book.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response Data:', data); // Log response for debugging
+                    if (data.status === "error") {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Purchase Error",
+                            text: data.message
+                        });
+                    } else if (data.status === "success") {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Success",
+                            text: data.message
+                        }).then(() => {
+                            // Clear the form and reset the table
+                            form.reset();
+                            bookListTable.innerHTML = '';
+                            totalAmountSpan.textContent = '₱0.00';
+                            bookDetailsSection.style.display = 'none';
+
+                            // Reload the page
+                            location.reload();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error submitting form:", error);
+                    Swal.fire({
+                        icon: "error",
+                        title: "System Error",
+                        text: "An unexpected error occurred. Please try again."
+                    });
+                });
+        });
+    </script>
+
+
 
 </body>
 
