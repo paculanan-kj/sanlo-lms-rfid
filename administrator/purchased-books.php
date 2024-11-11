@@ -1,6 +1,6 @@
 <?php
 session_start();
-$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -117,24 +117,24 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                                 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
 
                                 $query = "
-        SELECT 
-            pb.purchase_id, 
-            b.title,
-            pd.quantity, 
-            pb.total_amount, 
-            pb.cash AS student_money, 
-            pb.money_change, 
-            pb.created_at, 
-            CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name,  -- Combine first, middle, and last name
-            s.picture
-        FROM purchased_books pb 
-        LEFT JOIN purchase_details pd ON pb.purchase_id = pd.purchase_id
-        LEFT JOIN book b ON pd.book_id = b.book_id
-        LEFT JOIN book_categories c ON b.category_id = c.category_id
-        LEFT JOIN student s ON pb.student_id = s.student_id
-        WHERE pb.user_id = ?
-        ORDER BY pb.created_at DESC
-    ";
+                                        SELECT 
+                                            pb.purchase_id, 
+                                            b.title,
+                                            pd.quantity, 
+                                            pb.total_amount, 
+                                            pb.cash AS student_money, 
+                                            pb.money_change, 
+                                            pb.created_at, 
+                                            CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name,  -- Combine first, middle, and last name
+                                            s.picture
+                                        FROM purchased_books pb 
+                                        LEFT JOIN purchase_details pd ON pb.purchase_id = pd.purchase_id
+                                        LEFT JOIN book b ON pd.book_id = b.book_id
+                                        LEFT JOIN book_categories c ON b.category_id = c.category_id
+                                        LEFT JOIN student s ON pb.student_id = s.student_id
+                                        WHERE pb.user_id = ?
+                                        ORDER BY pb.created_at DESC
+                                    ";
 
                                 // Prepare the query
                                 $stmt = $con->prepare($query);
@@ -178,7 +178,7 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
 
                                         // Action Buttons: Edit and Delete
                                         echo "<td>";
-                                        echo "<button class='btn btn-warning btn-sm' onclick='editPurchase(" . $row['purchase_id'] . ")'>Edit</button> ";
+                                        echo "<button class='btn btn-primary btn-sm' onclick='editPurchase(" . $row['purchase_id'] . ")'>Edit</button> ";
                                         echo "<button class='btn btn-danger btn-sm' onclick='deletePurchase(" . $row['purchase_id'] . ")'>Delete</button>";
                                         echo "</td>";
 
@@ -187,45 +187,6 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                                     ?>
                                 </tbody>
                             </table>
-
-                            <script>
-                                // Edit Purchase function (you can modify this to show an edit form or open a modal)
-                                function editPurchase(purchaseId) {
-                                    alert('Edit Purchase ID: ' + purchaseId);
-                                    // Here you can implement your logic to load the edit form or open a modal
-                                }
-
-                                // Delete Purchase function (you can implement AJAX to delete the record)
-                                function deletePurchase(purchaseId) {
-                                    if (confirm('Are you sure you want to delete this purchase?')) {
-                                        // Make an AJAX call to delete the purchase from the database
-                                        fetch('backend/delete-purchase.php', {
-                                                method: 'POST',
-                                                body: JSON.stringify({
-                                                    purchase_id: purchaseId
-                                                }),
-                                                headers: {
-                                                    'Content-Type': 'application/json'
-                                                }
-                                            })
-                                            .then(response => response.json())
-                                            .then(data => {
-                                                if (data.status === 'success') {
-                                                    alert('Purchase deleted successfully');
-                                                    u location.reload(); // Reload the page after deletion
-                                                } else {
-                                                    alert('Error deleting purchase');
-                                                }
-                                            })
-                                            .catch(error => {
-                                                console.error('Error:', error);
-                                                alert('An error occurred while deleting the purchase');
-                                            });
-                                    }
-                                }
-                            </script>
-
-
                         </div>
                     </div>
                 </div>
@@ -347,6 +308,58 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                 </div>
             </div>
         </div>
+
+        <!-- Edit Purchase Modal -->
+        <div class="modal fade" id="editPurchaseModal" tabindex="-1" aria-labelledby="editPurchaseModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editPurchaseModalLabel">Edit Purchase</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <form id="editPurchaseForm">
+                        <div class="modal-body">
+                            <!-- Student Picture -->
+                            <div class="text-center mb-3">
+                                <img id="studentPicture" src="" alt="Student Image" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                            </div>
+                            <input type="hidden" id="purchase_id" name="purchase_id">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Book Title</label>
+                                <input type="text" class="form-control" id="title" name="title" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="student_name" class="form-label">Student Name</label>
+                                <input type="text" class="form-control" id="student_name" name="student_name" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity">
+                            </div>
+                            <div class="mb-3">
+                                <label for="total_amount" class="form-label">Total Amount</label>
+                                <input type="text" class="form-control" id="total_amount" name="total_amount">
+                            </div>
+                            <div class="mb-3">
+                                <label for="student_money" class="form-label">Money Paid</label>
+                                <input type="text" class="form-control" id="student_money" name="student_money">
+                            </div>
+                            <div class="mb-3">
+                                <label for="money_change" class="form-label">Change</label>
+                                <input type="text" class="form-control" id="money_change" name="money_change">
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
 
     </main><!-- End #main -->
 
@@ -775,6 +788,146 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
         });
     </script>
 
+    <script>
+        // Edit Purchase function (modify this to show an edit form or open a modal)
+        function editPurchase(purchaseId) {
+            Swal.fire({
+                title: 'Edit Purchase',
+                text: 'Edit Purchase ID: ' + purchaseId,
+                icon: 'info',
+                confirmButtonText: 'Okay'
+            });
+            // Add logic here to load the edit form or open a modal if needed
+        }
+
+        // Delete Purchase function with SweetAlert
+        function deletePurchase(purchaseId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you really want to delete this purchase?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Make an AJAX call to delete the purchase from the database
+                    fetch('backend/delete-purchase.php', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                purchase_id: purchaseId
+                            }),
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: 'Purchase has been deleted.',
+                                    icon: 'success',
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload(); // Reload the page after deletion
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: 'There was an error deleting the purchase.',
+                                    icon: 'error',
+                                    confirmButtonText: 'Try Again'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'An error occurred while deleting the purchase.',
+                                icon: 'error',
+                                confirmButtonText: 'Okay'
+                            });
+                        });
+                }
+            });
+        }
+    </script>
+
+    <script>
+        function editPurchase(purchaseId) {
+            // Show the modal
+            var modal = new bootstrap.Modal(document.getElementById('editPurchaseModal'));
+            modal.show();
+
+            // Fetch the purchase details via AJAX
+            fetch('backend/fetch-purchase.php', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        purchase_id: purchaseId
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Populate modal fields with fetched data
+                    document.getElementById('purchase_id').value = data.purchase_id;
+                    document.getElementById('title').value = data.title;
+                    document.getElementById('student_name').value = data.student_name;
+                    document.getElementById('quantity').value = data.quantity;
+                    document.getElementById('total_amount').value = data.total_amount;
+                    document.getElementById('student_money').value = data.student_money;
+                    document.getElementById('money_change').value = data.money_change;
+
+                    // Display the student picture
+                    document.getElementById('studentPicture').src = 'uploads/' + data.picture;
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+    </script>
+
+    <script>
+        document.getElementById('editPurchaseForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form from submitting traditionally
+
+            // Collect updated data from the form fields
+            const purchaseId = document.getElementById('purchase_id').value;
+            const quantity = document.getElementById('quantity').value;
+            const totalAmount = document.getElementById('total_amount').value;
+            const studentMoney = document.getElementById('student_money').value;
+            const moneyChange = document.getElementById('money_change').value;
+
+            // Send the updated data to the server
+            fetch('backend/update-purchase.php', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        purchase_id: purchaseId,
+                        quantity: quantity,
+                        total_amount: totalAmount,
+                        student_money: studentMoney,
+                        money_change: moneyChange
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        location.reload(); // Reload the page to see the changes
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error('Error updating purchase:', error));
+        });
+    </script>
 
 
 </body>

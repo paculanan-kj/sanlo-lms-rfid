@@ -1,5 +1,6 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);  // Get the current page name
+$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
 ?>
 
 <!-- ======= Sidebar ======= -->
@@ -123,14 +124,14 @@ $current_page = basename($_SERVER['PHP_SELF']);  // Get the current page name
 
         <!-- Reports Section -->
         <li class="nav-item">
-            <a class="nav-link collapsed <?php echo ($current_page == 'sold-books-report.php') ? 'active' : ''; ?>"
+            <a class="nav-link collapsed <?php echo in_array($current_page, ['sold-books-report.php', 'student-logs-report.php']) ? 'active' : ''; ?>"
                 data-bs-target="#reports-nav" data-bs-toggle="collapse" href="#">
                 <i class="bx bx-file"></i>
                 <span>Reports</span>
                 <i class="bi bi-chevron-down ms-auto"></i>
             </a>
             <ul id="reports-nav"
-                class="nav-content collapse <?php echo ($current_page == 'sold-books-report.php') ? 'show' : ''; ?>"
+                class="nav-content collapse <?php echo in_array($current_page, ['sold-books-report.php', 'student-logs-report.php']) ? 'show' : ''; ?>"
                 data-bs-parent="#sidebar-nav">
                 <li>
                     <a href="sold-books-report.php?user_id=<?php echo $user_id; ?>"
@@ -138,8 +139,15 @@ $current_page = basename($_SERVER['PHP_SELF']);  // Get the current page name
                         <i class="bi bi-circle"></i><span>Sold Books</span>
                     </a>
                 </li>
+                <li>
+                    <a href="student-logs-report.php?user_id=<?php echo $user_id; ?>"
+                        class="<?php echo ($current_page == 'student-logs-report.php') ? 'active' : ''; ?>">
+                        <i class="bi bi-circle"></i><span>Student Logs</span>
+                    </a>
+                </li>
             </ul>
         </li>
+
         <li class="nav-item">
             <a class="nav-link <?php echo ($current_page == 'students.php') ? 'active' : ''; ?>"
                 href="students.php?user_id=<?php echo $user_id; ?>">
