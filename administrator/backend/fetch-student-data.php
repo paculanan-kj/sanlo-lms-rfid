@@ -1,19 +1,14 @@
 <?php
 header('Content-Type: application/json');
-include 'dbcon.php'; // Include your database connection file
+include 'dbcon.php';
 
-// Get the posted JSON data
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (isset($data['rfid'])) {
     $rfid = $data['rfid'];
 
-    // Query to fetch student details from the 'student' table
-    $stmt = $con->prepare("
-        SELECT student_id, firstname, middlename, lastname
-        FROM student 
-        WHERE rfid = ?
-    ");
+    // Check RFID in the database
+    $stmt = $con->prepare("SELECT student_id, firstname, middlename, lastname FROM student WHERE rfid = ?");
     $stmt->bind_param("s", $rfid);
 
     if ($stmt->execute()) {
@@ -25,7 +20,7 @@ if (isset($data['rfid'])) {
             echo json_encode(['success' => false, 'message' => 'No student found with this RFID.']);
         }
     } else {
-        echo json_encode(['success' => false, 'message' => 'Database query failed.']);
+        echo json_encode(['success' => false, 'message' => 'Database query failed.', 'error' => $con->error]);
     }
 
     $stmt->close();
@@ -34,4 +29,3 @@ if (isset($data['rfid'])) {
 }
 
 $con->close();
-?>

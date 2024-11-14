@@ -1260,7 +1260,8 @@ h6 {
 
 .body-scan {
   font-family: "Nunito", sans-serif;
-  background-color: #0b285e;
+  background: rgb(14,93,255);
+background: radial-gradient(circle, rgba(14,93,255,1) 0%, rgba(20,81,153,1) 100%);
   color: white;
   display: flex;
   justify-content: center;

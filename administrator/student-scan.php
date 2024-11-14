@@ -1,5 +1,6 @@
 <?php
 session_start();
+$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,17 +37,16 @@ session_start();
 <body class="body-scan">
     <!-- Attendance System UI -->
     <div class="container main text-center">
-        <h1>Student Time In / Time Out</h1>
         <div class="card" style="background-color: #042A4A; color: white; padding: 20px;">
-            <h2>Scan RFID</h2>
+
+            <div class="d-flex justify-content-start">
+                <button class="btn btn-danger" onclick="window.location.href='student-logged.php?user_id=<?php echo $user_id; ?>'"><i class="bx bx-arrow-back"></i></button>
+            </div>
             <h2 id="currentDate"></h2>
             <h1 id="currentTime"></h1>
 
             <input type="text" id="rfidInput" name="rfid" placeholder="Scan RFID here..." autofocus />
             <p><strong>Student ID:</strong> <span id="studentId"></span></p>
-            <div class="d-flex justify-content-start">
-                <button class="btn btn-danger" onclick="window.location.href='student-logged.php'"><i class="bx bx-arrow-back"></i></button>
-            </div>
         </div>
 
         <!-- TimeIn/Out Card -->
@@ -81,25 +81,30 @@ session_start();
     <script src="assets/js/jquery.min.js"></script>
 
     <script>
-        // Function to update the current date and time
+        // Function to update the current date and time in Philippine Standard Time
         function updateDateTime() {
             const now = new Date();
 
-            // Format date as MM/DD/YYYY
-            const date = now.toLocaleDateString();
+            // Format date as MM/DD/YYYY in Philippine Standard Time
+            const date = now.toLocaleDateString("en-US", {
+                timeZone: "Asia/Manila"
+            });
             document.getElementById('currentDate').innerText = date;
 
-            // Format time as HH:MM:SS
-            const time = now.toLocaleTimeString();
+            // Format time as HH:MM:SS in Philippine Standard Time
+            const time = now.toLocaleTimeString("en-US", {
+                timeZone: "Asia/Manila"
+            });
             document.getElementById('currentTime').innerText = time;
         }
 
         // Update the date and time when the page loads
         window.onload = updateDateTime;
 
-        // Optionally, update the time every second
+        // Update the time every second
         setInterval(updateDateTime, 1000);
     </script>
+
 
     <script>
         // Function to update the current date and time
