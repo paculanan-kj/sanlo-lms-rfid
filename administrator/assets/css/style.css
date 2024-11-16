@@ -1316,3 +1316,11 @@ table .mp {
 .suggestion-item:hover {
   background-color: #f0f0f0;
 }
+
+.button-container {
+  position: absolute;
+  top: 10px; /* Adjust spacing from the top */
+  left: 10px; /* Adjust spacing from the left */
+  z-index: 10; /* Ensure it stays on top of other elements */
+}
+
