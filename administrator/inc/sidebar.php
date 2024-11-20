@@ -162,13 +162,5 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                 <span>Users</span>
             </a>
         </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="../backend/logout.php">
-                <i class="bx bx-log-out"></i>
-                <span>Logout</span>
-            </a>
-        </li>
-
     </ul>
 </aside>

@@ -28,9 +28,105 @@ session_start();
   <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet">
   <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
   <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="assets/sweet-alert/sweetalert2.min.css" rel="stylesheet">
 
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    .student-attendance-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .student-attendance-card {
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .student-attendance-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .student-avatar-wrapper {
+      display: flex;
+      justify-content: center;
+    }
+
+    .student-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #f1f3f9;
+    }
+
+    .time-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      min-height: 100px;
+      transition: transform 0.3s ease;
+    }
+
+    .time-box:hover {
+      transform: scale(1.05);
+    }
+
+    .time-box .time-label {
+      font-size: 0.75rem;
+      /* Smaller label */
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.5);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .time-box .time-value {
+      font-size: 0.9rem;
+      /* Larger value */
+      font-weight: 700;
+    }
+
+    .text-info {
+      color: #0dcaf0 !important;
+    }
+
+    @media (max-width: 768px) {
+      .time-box {
+        min-height: 80px;
+      }
+
+      .time-box .time-label {
+        font-size: 0.7rem;
+      }
+
+      .time-box .time-value {
+        font-size: 1rem;
+      }
+    }
+
+    .bg-success-soft {
+      background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-warning-soft {
+      background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .bg-info-soft {
+      background-color: rgba(13, 202, 240, 0.1);
+    }
+  </style>
+
 </head>
 
 <body>
@@ -53,82 +149,101 @@ session_start();
       <button onclick="location.href='student-scan.php?user_id=<?php echo $user_id; ?>';" class="btn btn-success">Student In/Out</button>
     </div>
 
+    <?php
+
+    // Get today's date in 'Y-m-d' format
+    $date = date('Y-m-d');
+
+    // Fetch attendance data for today's date
+    $sql = "
+    SELECT a.attendance_id, a.student_id, CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
+           a.time_in, a.time_out, a.date, s.picture 
+    FROM attendance a
+    JOIN student s ON a.student_id = s.student_id
+    WHERE a.date = ?
+";
+
+    $stmt = $con->prepare($sql);
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $attendanceData = [];
+
+    if ($result->num_rows > 0) {
+      while ($row = $result->fetch_assoc()) {
+        $attendanceData[] = [
+          'student_name' => $row['student_name'],
+          'time_in' => $row['time_in'] ?: '--:--',
+          'time_out' => $row['time_out'] ?: '--:--',
+          'attendance_date' => $row['date'],
+          'photo_url' => 'uploads/' . $row['picture']
+        ];
+      }
+    }
+
+    // If no attendance is found for today, return an empty array
+    if (empty($attendanceData)) {
+      $attendanceData = []; // No data for today
+    }
+
+    $stmt->close();
+    $con->close();
+    ?>
+
+    <!-- Display the Attendance Data -->
     <section class="section dashboard">
-      <div class="row">
-
-        <!-- Left side columns -->
-        <div class="col-lg-12">
-          <div class="row">
-
-            <!-- TimeIn/out Card -->
-            <div class="col-xxl-3 col-md-3">
-              <div class="card info-card sales-card">
-                <div class="card-body">
-                  <div class="d-flex justify-content-center pt-4">
-                    <a href="#" class="student d-flex align-items-center w-auto">
-                      <img src="assets/img/images.png" alt="">
-                    </a>
-                  </div><!-- End Logo -->
-                  <span class="d-flex justify-content-center">Kristian Jay Paculanan</span>
-                  <h1 class="pt-2">Time In: 9:40 AM</h1>
-                  <h1>Time Out: </h1>
-                  <h1>Date: 9/28/2024 </h1>
-                </div>
-              </div>
-            </div><!-- End Card -->
-
-            <!-- TimeIn/out Card -->
-            <div class="col-xxl-3 col-md-3">
-              <div class="card info-card sales-card">
-                <div class="card-body">
-                  <div class="d-flex justify-content-center pt-4">
-                    <a href="#" class="student d-flex align-items-center w-auto">
-                      <img src="assets/img/images.png" alt="">
-                    </a>
-                  </div><!-- End Logo -->
-                  <span class="d-flex justify-content-center">John Paul L. Bayok</span>
-                  <h1 class="pt-2">Time In: 7:40 AM</h1>
-                  <h1>Time Out: </h1>
-                  <h1>Date: 9/28/2024 </h1>
-                </div>
-              </div>
-            </div><!-- End Card -->
-
-            <!-- TimeIn/out Card -->
-            <div class="col-xxl-3 col-md-3">
-              <div class="card info-card sales-card">
-                <div class="card-body">
-                  <div class="d-flex justify-content-center pt-4">
-                    <a href="#" class="student d-flex align-items-center w-auto">
-                      <img src="assets/img/images.png" alt="">
-                    </a>
-                  </div><!-- End Logo -->
-                  <span class="d-flex justify-content-center">Gerber Jay L. Palomo</span>
-                  <h1 class="pt-2">Time In: 1:40 PM</h1>
-                  <h1>Time Out: </h1>
-                  <h1>Date: 9/28/2024 </h1>
-                </div>
-              </div>
-            </div><!-- End Card -->
-
-            <!-- TimeIn/out Card -->
-            <div class="col-xxl-3 col-md-3">
-              <div class="card info-card sales-card">
-                <div class="card-body">
-                  <div class="d-flex justify-content-center pt-4">
-                    <a href="#" class="student d-flex align-items-center w-auto">
-                      <img src="assets/img/images.png" alt="">
-                    </a>
-                  </div><!-- End Logo -->
-                  <span class="d-flex justify-content-center">John Doe</span>
-                  <h1 class="pt-2">Time In: 8:41 AM</h1>
-                  <h1>Time Out: </h1>
-                  <h1>Date: 9/29/2024 </h1>
-                </div>
-              </div>
-            </div><!-- End Card -->
+      <div class="row student-attendance-grid">
+        <?php if (empty($attendanceData)): ?>
+          <div class="col-12 text-center">
+            <p class="text-muted">No Students are logged for today.</p>
           </div>
-        </div>
+        <?php else: ?>
+          <?php foreach ($attendanceData as $student): ?>
+            <div class="col-3 mb-4"> <!-- col-3 ensures 4 cards per row -->
+              <div class="card student-attendance-card">
+                <div class="card-body">
+                  <div class="student-header text-center">
+                    <div class="student-avatar-wrapper mt-4">
+                      <img src="<?php echo $student['photo_url']; ?>" alt="Student Photo" class="student-avatar">
+                    </div>
+                    <span class="student-id text-muted"><?php echo $student['student_name']; ?></span>
+                  </div>
+
+                  <div class="attendance-details mt-4">
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <div class="time-box time-in bg-success-soft">
+                          <div class="time-label">Time In</div>
+                          <div class="time-value text-success"><?php echo $student['time_in']; ?></div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="time-box time-out bg-warning-soft">
+                          <div class="time-label">Time Out</div>
+                          <div class="time-value text-warning"><?php echo $student['time_out']; ?></div>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="time-box date bg-info-soft">
+                          <div class="time-label">Date</div>
+                          <div class="time-value text-info"><?php echo $student['attendance_date']; ?></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="attendance-status mt-3 text-center mb-3">
+                    <span class="badge <?php echo ($student['time_out'] === '--:--') ? 'bg-warning-soft' : 'bg-success'; ?>">
+                      <?php echo ($student['time_out'] === '--:--') ? 'Partially Logged' : 'Fully Logged'; ?>
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </div>
     </section>
 
@@ -143,9 +258,9 @@ session_start();
   <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
   <script src="assets/vendor/tinymce/tinymce.min.js"></script>
   <script src="assets/vendor/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
+  <script src="assets/sweet-alert/sweetalert2.all.min.js"></script>
   <script src="assets/js/main.js"></script>
+  <script src="assets/js/jquery.min.js"></script>
 
 </body>
 
