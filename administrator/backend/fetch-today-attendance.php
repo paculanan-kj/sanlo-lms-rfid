@@ -11,16 +11,15 @@ $sql = "
     FROM attendance a
     JOIN student s ON a.student_id = s.student_id
     WHERE a.date = ?
-    ORDER BY a.attendance_id DESC  -- Order by attendance_id in descending order
-";
+    ORDER BY a.attendance_id DESC";
 
 $stmt = $con->prepare($sql);
 $stmt->bind_param("s", $date);
 $stmt->execute();
 $result = $stmt->get_result();
 
+$attendanceData = [];
 if ($result->num_rows > 0) {
-    $attendanceData = [];
     while ($row = $result->fetch_assoc()) {
         $attendanceData[] = [
             'attendance_id' => $row['attendance_id'],
@@ -32,10 +31,10 @@ if ($result->num_rows > 0) {
             'photo_url' => 'uploads/' . $row['picture']
         ];
     }
-    echo json_encode(['success' => true, 'attendance' => $attendanceData]);
-} else {
-    echo json_encode(['success' => false, 'message' => 'No attendance found for today.']);
 }
 
+// Clean up
 $stmt->close();
 $con->close();
+
+// Do not echo JSON here when included in other scripts

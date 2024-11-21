@@ -38,21 +38,21 @@ session_start();
 
 <body>
     <?php
-  include 'inc/navbar.php';
-  include 'inc/sidebar.php';
-  include 'backend/dbcon.php'; // Include your database connection
+    include 'inc/navbar.php';
+    include 'inc/sidebar.php';
+    include 'backend/dbcon.php'; // Include your database connection
 
-  // Query to fetch users from the database
-  $sql = "SELECT user_id, firstname, middlename, lastname, email, username FROM user";
-  $result = $con->query($sql);
-  ?>
+    // Query to fetch users from the database
+    $sql = "SELECT user_id, firstname, middlename, lastname, email, username FROM user";
+    $result = $con->query($sql);
+    ?>
     <main id="main" class="main">
 
         <div class="pagetitle">
             <h1>Category</h1>
             <nav>
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="index.php"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
                     <li class="breadcrumb-item">Books</li>
                     <li class="breadcrumb-item active">Manage Category</li>
                 </ol>
@@ -81,17 +81,17 @@ session_start();
                                 </thead>
                                 <tbody>
                                     <?php
-                                      include 'backend/dbcon.php'; // Include your DB connection script
+                                    include 'backend/dbcon.php'; // Include your DB connection script
 
-                                      // Query to fetch categories from the database
-                                      $query = "SELECT category_id, category_name, created_at FROM book_categories ORDER BY created_at DESC";
-                                      $result = $con->query($query);
+                                    // Query to fetch categories from the database
+                                    $query = "SELECT category_id, category_name, created_at FROM book_categories ORDER BY created_at DESC";
+                                    $result = $con->query($query);
 
-                                      if ($result->num_rows > 0) {
-                                          while ($row = $result->fetch_assoc()) {
-                                              echo "<tr>";
-                                              echo "<td>" . htmlspecialchars($row['category_name']) . "</td>";
-                                              echo "<td>
+                                    if ($result->num_rows > 0) {
+                                        while ($row = $result->fetch_assoc()) {
+                                            echo "<tr>";
+                                            echo "<td>" . htmlspecialchars($row['category_name']) . "</td>";
+                                            echo "<td>
                                                       <button class='btn btn-primary btn-sm edit-btn' 
                                                               data-id='" . $row['category_id'] . "' 
                                                               data-name='" . htmlspecialchars($row['category_name']) . "' 
@@ -106,14 +106,14 @@ session_start();
                                                     </td>";
 
 
-                                              echo "</tr>";
-                                          }
-                                      } else {
-                                          echo "<tr><td colspan='2'>No categories found</td></tr>";
-                                      }
+                                            echo "</tr>";
+                                        }
+                                    } else {
+                                        echo "<tr><td colspan='2'>No categories found</td></tr>";
+                                    }
 
-                                      $con->close();
-                                      ?>
+                                    $con->close();
+                                    ?>
 
                                 </tbody>
                             </table>
@@ -194,167 +194,167 @@ session_start();
     <script src="assets/js/jquery.min.js"></script>
 
     <script>
-    $(document).ready(function() {
-        $('#addCategoryForm').submit(function(event) {
-            event.preventDefault(); // Prevent default form submission
+        $(document).ready(function() {
+            $('#addCategoryForm').submit(function(event) {
+                event.preventDefault(); // Prevent default form submission
 
-            var categoryName = $('#categoryName').val();
+                var categoryName = $('#categoryName').val();
 
-            $.ajax({
-                url: 'backend/add-category.php',
-                type: 'POST',
-                data: {
-                    category_name: categoryName
-                },
-                success: function(response) {
-                    if (response === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Category Added',
-                            text: 'The category has been added successfully!'
-                        }).then(() => {
-                            // Close modal and refresh page or table
-                            $('#addCategoryModal').modal('hide');
-                            location
-                                .reload(); // Optionally refresh to show updated data
-                        });
-                    } else {
+                $.ajax({
+                    url: 'backend/add-category.php',
+                    type: 'POST',
+                    data: {
+                        category_name: categoryName
+                    },
+                    success: function(response) {
+                        if (response === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Category Added',
+                                text: 'The category has been added successfully!'
+                            }).then(() => {
+                                // Close modal and refresh page or table
+                                $('#addCategoryModal').modal('hide');
+                                location
+                                    .reload(); // Optionally refresh to show updated data
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response
+                            });
+                        }
+                    },
+                    error: function() {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: response
+                            text: 'An error occurred while adding the category.'
                         });
                     }
-                },
-                error: function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An error occurred while adding the category.'
-                    });
-                }
+                });
             });
         });
-    });
     </script>
 
     <script>
-    // Populate the edit modal with category data
-    const editCategoryModal = document.getElementById('editCategoryModal');
-    editCategoryModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget; // Button that triggered the modal
-        const categoryId = button.getAttribute('data-id'); // Extract info from data-* attributes
-        const categoryName = button.getAttribute('data-name'); // Extract name from data-* attributes
+        // Populate the edit modal with category data
+        const editCategoryModal = document.getElementById('editCategoryModal');
+        editCategoryModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const categoryId = button.getAttribute('data-id'); // Extract info from data-* attributes
+            const categoryName = button.getAttribute('data-name'); // Extract name from data-* attributes
 
-        // Update the modal's content.
-        document.getElementById('editCategoryId').value = categoryId;
-        document.getElementById('editCategoryName').value = categoryName;
-    });
+            // Update the modal's content.
+            document.getElementById('editCategoryId').value = categoryId;
+            document.getElementById('editCategoryName').value = categoryName;
+        });
 
-    // Handle form submission with AJAX
-    document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent form submission
+        // Handle form submission with AJAX
+        document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent form submission
 
-        const formData = new FormData(this);
+            const formData = new FormData(this);
 
-        fetch('backend/edit-category.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success alert using SweetAlert
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: data.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        location.reload(); // Reload the page to reflect changes
-                    });
-                } else {
-                    // Show error alert
+            fetch('backend/edit-category.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success alert using SweetAlert
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: data.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload(); // Reload the page to reflect changes
+                        });
+                    } else {
+                        // Show error alert
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error!',
-                        text: data.message
+                        text: 'An unexpected error occurred.'
                     });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: 'An unexpected error occurred.'
                 });
-            });
-    });
+        });
     </script>
 
     <script>
-    // Handle delete category
-    document.addEventListener('click', function(event) {
-        if (event.target.classList.contains('delete-btn')) {
-            const button = event.target; // Get the clicked button
-            const categoryId = button.getAttribute('data-id'); // Get the category ID
-            const categoryName = button.getAttribute('data-name'); // Get the category name
+        // Handle delete category
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('delete-btn')) {
+                const button = event.target; // Get the clicked button
+                const categoryId = button.getAttribute('data-id'); // Get the category ID
+                const categoryName = button.getAttribute('data-name'); // Get the category name
 
-            // Show SweetAlert confirmation dialog
-            Swal.fire({
-                title: 'Are you sure?',
-                text: `You are about to delete the category: ${categoryName}`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Make AJAX call to delete the category
-                    fetch('backend/delete-category.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                category_id: categoryId
-                            }) // Send category ID as JSON
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted!',
-                                    text: data.message,
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                }).then(() => {
-                                    location.reload(); // Reload the page to reflect changes
-                                });
-                            } else {
+                // Show SweetAlert confirmation dialog
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: `You are about to delete the category: ${categoryName}`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Make AJAX call to delete the category
+                        fetch('backend/delete-category.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    category_id: categoryId
+                                }) // Send category ID as JSON
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Deleted!',
+                                        text: data.message,
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        location.reload(); // Reload the page to reflect changes
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error!',
+                                        text: data.message
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error!',
-                                    text: data.message
+                                    text: 'An unexpected error occurred.'
                                 });
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'An unexpected error occurred.'
                             });
-                        });
-                }
-            });
-        }
-    });
+                    }
+                });
+            }
+        });
     </script>
 
 </body>

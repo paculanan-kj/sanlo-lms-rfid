@@ -150,57 +150,19 @@ session_start();
     </div>
 
     <?php
-
-    // Get today's date in 'Y-m-d' format
-    $date = date('Y-m-d');
-
-    // Fetch attendance data for today's date
-    $sql = "
-    SELECT a.attendance_id, a.student_id, CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
-           a.time_in, a.time_out, a.date, s.picture 
-    FROM attendance a
-    JOIN student s ON a.student_id = s.student_id
-    WHERE a.date = ?
-";
-
-    $stmt = $con->prepare($sql);
-    $stmt->bind_param("s", $date);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    $attendanceData = [];
-
-    if ($result->num_rows > 0) {
-      while ($row = $result->fetch_assoc()) {
-        $attendanceData[] = [
-          'student_name' => $row['student_name'],
-          'time_in' => $row['time_in'] ?: '--:--',
-          'time_out' => $row['time_out'] ?: '--:--',
-          'attendance_date' => $row['date'],
-          'photo_url' => 'uploads/' . $row['picture']
-        ];
-      }
-    }
-
-    // If no attendance is found for today, return an empty array
-    if (empty($attendanceData)) {
-      $attendanceData = []; // No data for today
-    }
-
-    $stmt->close();
-    $con->close();
+    include('backend/fetch-today-attendance.php');
     ?>
 
     <!-- Display the Attendance Data -->
     <section class="section dashboard">
-      <div class="row student-attendance-grid">
+      <div class="row">
         <?php if (empty($attendanceData)): ?>
           <div class="col-12 text-center">
             <p class="text-muted">No Students are logged for today.</p>
           </div>
         <?php else: ?>
           <?php foreach ($attendanceData as $student): ?>
-            <div class="col-3 mb-4"> <!-- col-3 ensures 4 cards per row -->
+            <div class="col-md-3 mb-2"> <!-- Changed from col-3 to col-md-3 -->
               <div class="card student-attendance-card">
                 <div class="card-body">
                   <div class="student-header text-center">
@@ -234,7 +196,7 @@ session_start();
                   </div>
 
                   <div class="attendance-status mt-3 text-center mb-3">
-                    <span class="badge <?php echo ($student['time_out'] === '--:--') ? 'bg-warning-soft' : 'bg-success'; ?>">
+                    <span class="badge <?php echo ($student['time_out'] === '--:--') ? 'bg-warning' : 'bg-success'; ?>">
                       <?php echo ($student['time_out'] === '--:--') ? 'Partially Logged' : 'Fully Logged'; ?>
                     </span>
                   </div>

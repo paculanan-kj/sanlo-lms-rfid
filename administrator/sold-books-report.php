@@ -37,9 +37,41 @@ session_start();
     <link href="assets/css/style.css" rel="stylesheet">
 
     <style>
+        /* Hide the print button and filter form during printing */
         @media print {
             .no-print {
                 display: none;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            table,
+            th,
+            td {
+                border: 1px solid black;
+            }
+
+            th,
+            td {
+                padding: 8px;
+                text-align: left;
+            }
+
+            /* Header styling */
+            .header {
+                text-align: center;
+                font-size: 16px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+
+            .date-range {
+                text-align: center;
+                font-size: 14px;
+                margin-bottom: 20px;
             }
         }
     </style>
@@ -61,7 +93,7 @@ session_start();
             <h1>Sold Books</h1>
             <nav>
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="index.php"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
                     <li class="breadcrumb-item">Reports</li>
                     <li class="breadcrumb-item active">Sold Books</li>
                 </ol>
@@ -76,14 +108,6 @@ session_start();
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="card-title">Sold Books Report</h5>
                             </div>
-                            <?php
-                            // Ensure the database connection and user session data are loaded
-                            require('backend/dbcon.php');
-
-                            // Define variables for selected month and year
-                            $selectedMonth = isset($_POST['month']) ? $_POST['month'] : date('m');
-                            $selectedYear = isset($_POST['year']) ? $_POST['year'] : date('Y');
-                            ?>
 
                             <?php
                             // Ensure the database connection and user session data are loaded
@@ -123,13 +147,13 @@ session_start();
                                 </div>
 
                                 <!-- Print Button - with "no-print" class to hide it during printing -->
-                                <button type="button" class="btn btn-secondary no-print" onclick="window.print()">
+                                <button type="button" class="btn btn-secondary no-print" onclick="printTable()">
                                     <i class="bx bx-printer me-1"></i> Print
                                 </button>
                             </form>
 
                             <!-- Table that will be printed -->
-                            <table class="table">
+                            <table class="table" id="attendanceTable">
                                 <thead>
                                     <tr>
                                         <th style="width: 20%">Book</th>
@@ -147,26 +171,26 @@ session_start();
                                 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
 
                                 $query = "
-            SELECT 
-                pb.purchase_id, 
-                b.title,
-                pd.quantity, 
-                pb.total_amount, 
-                pb.cash AS student_money, 
-                pb.money_change, 
-                pb.created_at, 
-                CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name,
-                s.picture
-            FROM purchased_books pb 
-            LEFT JOIN purchase_details pd ON pb.purchase_id = pd.purchase_id
-            LEFT JOIN book b ON pd.book_id = b.book_id
-            LEFT JOIN book_categories c ON b.category_id = c.category_id
-            LEFT JOIN student s ON pb.student_id = s.student_id
-            WHERE pb.user_id = ?
-            AND MONTH(pb.created_at) = ?
-            AND YEAR(pb.created_at) = ?
-            ORDER BY pb.created_at DESC
-        ";
+                                        SELECT 
+                                            pb.purchase_id, 
+                                            b.title,
+                                            pd.quantity, 
+                                            pb.total_amount, 
+                                            pb.cash AS student_money, 
+                                            pb.money_change, 
+                                            pb.created_at, 
+                                            CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name,
+                                            s.picture
+                                        FROM purchased_books pb 
+                                        LEFT JOIN purchase_details pd ON pb.purchase_id = pd.purchase_id
+                                        LEFT JOIN book b ON pd.book_id = b.book_id
+                                        LEFT JOIN book_categories c ON b.category_id = c.category_id
+                                        LEFT JOIN student s ON pb.student_id = s.student_id
+                                        WHERE pb.user_id = ?
+                                        AND MONTH(pb.created_at) = ?
+                                        AND YEAR(pb.created_at) = ?
+                                        ORDER BY pb.created_at DESC
+                                    ";
 
                                 // Prepare the query
                                 $stmt = $con->prepare($query);
@@ -230,6 +254,42 @@ session_start();
     <script src="assets/sweet-alert/sweetalert2.all.min.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="assets/js/jquery.min.js"></script>
+
+    <script>
+        function printTable() {
+            // Get the selected month and year from the form
+            var selectedMonth = document.getElementById('month').value;
+            var selectedYear = document.getElementById('year').value;
+
+            // Format the date range string
+            var monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
+                month: 'long'
+            });
+            var dateRange = "Sold Books for " + monthName + " " + selectedYear;
+
+            // Get the table element
+            var printContent = document.getElementById('attendanceTable');
+
+            // Open the print dialog
+            var printWindow = window.open('', '', 'height=800,width=1200');
+            printWindow.document.write('<html><head><title>Sold Books Report</title>');
+            printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; }');
+            printWindow.document.write('th, td { padding: 8px; border: 1px solid black; text-align: left; }</style>');
+            printWindow.document.write('</head><body>');
+
+            // Add the header with the school name
+            printWindow.document.write('<div class="header">St. Lorenzo School of Polomolok Inc.</div>');
+
+            // Add the date range (Month & Year)
+            printWindow.document.write('<div class="date-range">' + dateRange + '</div>');
+
+            // Add the table content
+            printWindow.document.write(printContent.outerHTML); // Print the table content
+            printWindow.document.write('</body></html>');
+            printWindow.document.close(); // Close the document for printing
+            printWindow.print(); // Trigger the print dialog
+        }
+    </script>
 
 </body>
 

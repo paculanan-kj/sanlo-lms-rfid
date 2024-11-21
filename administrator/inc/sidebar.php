@@ -9,14 +9,6 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
     <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-            <a class="nav-link <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>"
-                href="index.php?user_id=<?php echo $user_id; ?>">
-                <i class="bx bx-home-alt"></i>
-                <span>Dashboard</span>
-            </a>
-        </li>
-
-        <li class="nav-item">
             <a class="nav-link <?php echo ($current_page == 'student-logged.php') ? 'active' : ''; ?>"
                 href="student-logged.php?user_id=<?php echo $user_id; ?>">
                 <i class="bi bi-box-arrow-in-right"></i>
@@ -147,7 +139,6 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                 </li>
             </ul>
         </li>
-
         <li class="nav-item">
             <a class="nav-link <?php echo ($current_page == 'students.php') ? 'active' : ''; ?>"
                 href="students.php?user_id=<?php echo $user_id; ?>">

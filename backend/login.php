@@ -22,18 +22,18 @@ if (isset($_POST['rfid']) && !empty($_POST['rfid'])) {
             $_SESSION['user_id'] = $row['user_id']; // Store the user_id in session
 
             // Redirect to administrator.php since there's only one user (librarian)
-            header("Location: ../administrator/index.php?user_id=" . $_SESSION['user_id']);
+            header("Location: ../administrator/student-logged.php?user_id=" . $_SESSION['user_id']);
             exit();
         } else {
             $_SESSION['error'] = "Invalid RFID tag!";
-            header("Location: ../index.php");
+            header("Location: ../student-logged.php");
             exit();
         }
 
         $stmt->close();
     } else {
         $_SESSION['error'] = "Database query failed!";
-        header("Location: ../index.php");
+        header("Location: ../student-logged.php");
         exit();
     }
 } elseif (isset($_POST['username']) && isset($_POST['password'])) {
@@ -59,35 +59,35 @@ if (isset($_POST['rfid']) && !empty($_POST['rfid'])) {
                 $_SESSION['user_id'] = $row['user_id']; // Store the user_id in session
 
                 // Redirect to administrator.php since there's only one user (librarian)
-                header("Location: ../administrator/index.php?user_id=" . $_SESSION['user_id']);
+                header("Location: ../administrator/student-logged.php?user_id=" . $_SESSION['user_id']);
                 exit();
             } else {
                 $_SESSION['error'] = "Incorrect password!";
-                header("Location: ../index.php");
+                header("Location: ../student-logged.php");
                 exit();
             }
         } else {
             $_SESSION['error'] = "User not found!";
-            header("Location: ../index.php");
+            header("Location: ../student-logged.php");
             exit();
         }
 
         $stmt->close();
     } else {
         $_SESSION['error'] = "Database query failed!";
-        header("Location: ../index.php");
+        header("Location: ../student-logged.php");
         exit();
     }
 } else {
     $_SESSION['error'] = "Please provide either an RFID tag or username/password!";
-    header("Location: ../index.php");
+    header("Location: ../student-logged.php");
     exit();
 }
 
 // If the RFID scanning fails, show a prompt to log in using username and password
 if (isset($_SESSION['error']) && strpos($_SESSION['error'], 'Invalid RFID tag!') !== false) {
     $_SESSION['error'] = "RFID scanning failed. Please log in using your username and password.";
-    header("Location: ../index.php");
+    header("Location: ../student-logged.php");
     exit();
 }
 

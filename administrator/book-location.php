@@ -38,21 +38,21 @@ session_start();
 
 <body>
     <?php
-  include 'inc/navbar.php';
-  include 'inc/sidebar.php';
-  include 'backend/dbcon.php'; // Include your database connection
+    include 'inc/navbar.php';
+    include 'inc/sidebar.php';
+    include 'backend/dbcon.php'; // Include your database connection
 
-  // Query to fetch users from the database
-  $sql = "SELECT user_id, firstname, middlename, lastname, email, username FROM user";
-  $result = $con->query($sql);
-  ?>
+    // Query to fetch users from the database
+    $sql = "SELECT user_id, firstname, middlename, lastname, email, username FROM user";
+    $result = $con->query($sql);
+    ?>
     <main id="main" class="main">
 
         <div class="pagetitle">
             <h1>Location</h1>
             <nav>
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="index.php"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
                     <li class="breadcrumb-item active">Books</li>
                     <li class="breadcrumb-item active">Location</li>
                 </ol>
@@ -98,14 +98,70 @@ session_start();
     <script src="assets/js/jquery.min.js"></script>
 
     <script>
-    let selectedBookTitle = ''; // Variable to store the selected book title
+        let selectedBookTitle = ''; // Variable to store the selected book title
 
-    document.getElementById('searchBook').addEventListener('input', function() {
-        const bookTitle = this.value;
+        document.getElementById('searchBook').addEventListener('input', function() {
+            const bookTitle = this.value;
 
-        // Fetch suggestions based on user input
-        if (bookTitle.length > 0) {
-            fetch('backend/search-suggestions.php', {
+            // Fetch suggestions based on user input
+            if (bookTitle.length > 0) {
+                fetch('backend/search-suggestions.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            title: bookTitle
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const suggestionsDiv = document.getElementById('suggestions');
+                        suggestionsDiv.innerHTML = ''; // Clear previous suggestions
+
+                        if (data.success && data.suggestions.length > 0) {
+                            suggestionsDiv.style.display = 'block'; // Show dropdown
+                            data.suggestions.forEach(suggestion => {
+                                const suggestionItem = document.createElement('div');
+                                suggestionItem.classList.add('suggestion-item');
+                                suggestionItem.textContent = suggestion.title; // Display book title
+                                suggestionItem.addEventListener('click', function() {
+                                    document.getElementById('searchBook').value = suggestion
+                                        .title; // Set input to clicked suggestion
+                                    selectedBookTitle = suggestion
+                                        .title; // Store the selected book title
+                                    suggestionsDiv.innerHTML = ''; // Clear suggestions
+                                    suggestionsDiv.style.display = 'none'; // Hide dropdown
+                                });
+                                suggestionsDiv.appendChild(suggestionItem);
+                            });
+                        } else {
+                            suggestionsDiv.style.display = 'none'; // Hide dropdown if no suggestions
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        document.getElementById('suggestions').innerHTML =
+                            '<div class="alert alert-danger">An error occurred. Please try again.</div>';
+                    });
+            } else {
+                document.getElementById('suggestions').style.display = 'none'; // Hide dropdown if input is empty
+            }
+        });
+
+        // Handle search button click
+        document.getElementById('searchButton').addEventListener('click', function() {
+            if (selectedBookTitle) {
+                fetchBookLocation(selectedBookTitle); // Fetch and display location for the selected book
+            } else {
+                alert(
+                    'Please select a book from the suggestions before searching.'); // Alert if no book is selected
+            }
+        });
+
+        // Function to fetch book location after selection
+        function fetchBookLocation(bookTitle) {
+            fetch('backend/search-book.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -116,76 +172,20 @@ session_start();
                 })
                 .then(response => response.json())
                 .then(data => {
-                    const suggestionsDiv = document.getElementById('suggestions');
-                    suggestionsDiv.innerHTML = ''; // Clear previous suggestions
+                    const resultsDiv = document.getElementById('searchResults');
+                    resultsDiv.innerHTML = ''; // Clear previous results
 
-                    if (data.success && data.suggestions.length > 0) {
-                        suggestionsDiv.style.display = 'block'; // Show dropdown
-                        data.suggestions.forEach(suggestion => {
-                            const suggestionItem = document.createElement('div');
-                            suggestionItem.classList.add('suggestion-item');
-                            suggestionItem.textContent = suggestion.title; // Display book title
-                            suggestionItem.addEventListener('click', function() {
-                                document.getElementById('searchBook').value = suggestion
-                                    .title; // Set input to clicked suggestion
-                                selectedBookTitle = suggestion
-                                .title; // Store the selected book title
-                                suggestionsDiv.innerHTML = ''; // Clear suggestions
-                                suggestionsDiv.style.display = 'none'; // Hide dropdown
-                            });
-                            suggestionsDiv.appendChild(suggestionItem);
-                        });
-                    } else {
-                        suggestionsDiv.style.display = 'none'; // Hide dropdown if no suggestions
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('suggestions').innerHTML =
-                        '<div class="alert alert-danger">An error occurred. Please try again.</div>';
-                });
-        } else {
-            document.getElementById('suggestions').style.display = 'none'; // Hide dropdown if input is empty
-        }
-    });
-
-    // Handle search button click
-    document.getElementById('searchButton').addEventListener('click', function() {
-        if (selectedBookTitle) {
-            fetchBookLocation(selectedBookTitle); // Fetch and display location for the selected book
-        } else {
-            alert(
-            'Please select a book from the suggestions before searching.'); // Alert if no book is selected
-        }
-    });
-
-    // Function to fetch book location after selection
-    function fetchBookLocation(bookTitle) {
-        fetch('backend/search-book.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    title: bookTitle
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const resultsDiv = document.getElementById('searchResults');
-                resultsDiv.innerHTML = ''; // Clear previous results
-
-                if (data.success) {
-                    const bookDetails = document.createElement('div');
-                    bookDetails.classList.add('alert', 'alert-info');
-                    bookDetails.innerHTML = `<h2>Title: ${data.book.title}</h2> <br>
+                    if (data.success) {
+                        const bookDetails = document.createElement('div');
+                        bookDetails.classList.add('alert', 'alert-info');
+                        bookDetails.innerHTML = `<h2>Title: ${data.book.title}</h2> <br>
                                      <h2>Location: ${data.book.location}</h2> `;
-                    resultsDiv.appendChild(bookDetails);
-                } else {
-                    resultsDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-                }
-            });
-    }
+                        resultsDiv.appendChild(bookDetails);
+                    } else {
+                        resultsDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                    }
+                });
+        }
     </script>
 
 </body>

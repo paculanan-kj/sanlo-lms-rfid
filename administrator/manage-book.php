@@ -38,21 +38,21 @@ session_start();
 
 <body>
     <?php
-  include 'inc/navbar.php';
-  include 'inc/sidebar.php';
-  include 'backend/dbcon.php'; // Include your database connection
+    include 'inc/navbar.php';
+    include 'inc/sidebar.php';
+    include 'backend/dbcon.php'; // Include your database connection
 
-  // Query to fetch users from the database
-  $sql = "SELECT user_id, firstname, middlename, lastname, email, username FROM user";
-  $result = $con->query($sql);
-  ?>
+    // Query to fetch users from the database
+    $sql = "SELECT user_id, firstname, middlename, lastname, email, username FROM user";
+    $result = $con->query($sql);
+    ?>
     <main id="main" class="main">
 
         <div class="pagetitle">
             <h1>Books</h1>
             <nav>
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="index.php"><i class="bi bi-house-door"></i></a></li>
+                    <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
                     <li class="breadcrumb-item active">Books</li>
                     <li class="breadcrumb-item active">Manage Books</li>
                 </ol>
@@ -88,37 +88,37 @@ session_start();
                                 </thead>
                                 <tbody>
                                     <?php
-                                      require('backend/dbcon.php'); // Ensure this file contains your database connection logic
+                                    require('backend/dbcon.php'); // Ensure this file contains your database connection logic
 
-                                      // Query to fetch all books with their associated category names
-                                      $query = "
+                                    // Query to fetch all books with their associated category names
+                                    $query = "
                                           SELECT b.*, c.category_id, c.category_name
                                           FROM book b
                                           LEFT JOIN book_categories c ON b.category_id = c.category_id
                                       ";
-                                      $result = $con->query($query);
+                                    $result = $con->query($query);
 
-                                      // Check for errors
-                                      if ($result === false) {
-                                          die("Error fetching data: " . $con->error);
-                                      }
+                                    // Check for errors
+                                    if ($result === false) {
+                                        die("Error fetching data: " . $con->error);
+                                    }
 
-                                      // Fetch and display each book
-                                      while ($row = $result->fetch_assoc()) {
-                                          echo "<tr>";
-                                          echo "<td>" . htmlspecialchars($row['category_name']) . "</td>"; // Display the category name
-                                          echo "<td>" . htmlspecialchars($row['title']) . "</td>"; // Assuming the title column is book_title
-                                          echo "<td>" . htmlspecialchars($row['author']) . "</td>";                                             
-                                          echo "<td>" . htmlspecialchars($row['isbn']) . "</td>";
-                                          echo "<td>" . htmlspecialchars($row['publisher']) . "</td>";
-                                          echo "<td style='display: none;'>" . htmlspecialchars($row['publication_year']) . "</td>";                                             
-                                          echo "<td style='display: none;'>" . htmlspecialchars($row['location']) . "</td>";
-                                          
-                                          // Display copies as a badge
-                                          echo "<td><span class='badge bg-warning text-dark'>" . htmlspecialchars($row['copies']) . "</span></td>";
-                                          echo "<td style='display: none;'>₱" . number_format($row['amount'], 2) . "</td>";
-                                          
-                                          echo "<td>
+                                    // Fetch and display each book
+                                    while ($row = $result->fetch_assoc()) {
+                                        echo "<tr>";
+                                        echo "<td>" . htmlspecialchars($row['category_name']) . "</td>"; // Display the category name
+                                        echo "<td>" . htmlspecialchars($row['title']) . "</td>"; // Assuming the title column is book_title
+                                        echo "<td>" . htmlspecialchars($row['author']) . "</td>";
+                                        echo "<td>" . htmlspecialchars($row['isbn']) . "</td>";
+                                        echo "<td>" . htmlspecialchars($row['publisher']) . "</td>";
+                                        echo "<td style='display: none;'>" . htmlspecialchars($row['publication_year']) . "</td>";
+                                        echo "<td style='display: none;'>" . htmlspecialchars($row['location']) . "</td>";
+
+                                        // Display copies as a badge
+                                        echo "<td><span class='badge bg-warning text-dark'>" . htmlspecialchars($row['copies']) . "</span></td>";
+                                        echo "<td style='display: none;'>₱" . number_format($row['amount'], 2) . "</td>";
+
+                                        echo "<td>
                                               <button 
                                                   class='btn btn-primary btn-sm btn-update' 
                                                   data-id='" . $row['book_id'] . "' 
@@ -133,8 +133,8 @@ session_start();
                                               </button>
                                             </td>";
 
-                                          echo "</tr>";
-                                      }
+                                        echo "</tr>";
+                                    }
                                     ?>
                                 </tbody>
                             </table>
@@ -165,21 +165,21 @@ session_start();
                                         <select class="form-select" id="category" name="category_id" required>
                                             <option value="">Select Category</option>
                                             <?php
-                                    include 'backend/dbcon.php'; // Include your DB connection script
+                                            include 'backend/dbcon.php'; // Include your DB connection script
 
-                                    // Fetch categories from the database
-                                    $query = "SELECT category_id, category_name FROM book_categories ORDER BY category_name ASC";
-                                    $result = $con->query($query);
+                                            // Fetch categories from the database
+                                            $query = "SELECT category_id, category_name FROM book_categories ORDER BY category_name ASC";
+                                            $result = $con->query($query);
 
-                                    if ($result->num_rows > 0) {
-                                        while ($row = $result->fetch_assoc()) {
-                                            echo "<option value='" . $row['category_id'] . "'>" . htmlspecialchars($row['category_name']) . "</option>";
-                                        }
-                                    } else {
-                                        echo "<option value=''>No categories available</option>";
-                                    }
-                                    $con->close();
-                                    ?>
+                                            if ($result->num_rows > 0) {
+                                                while ($row = $result->fetch_assoc()) {
+                                                    echo "<option value='" . $row['category_id'] . "'>" . htmlspecialchars($row['category_name']) . "</option>";
+                                                }
+                                            } else {
+                                                echo "<option value=''>No categories available</option>";
+                                            }
+                                            $con->close();
+                                            ?>
                                         </select>
                                     </div>
 
@@ -237,17 +237,17 @@ session_start();
         </form>
 
         <?php
-          require('backend/dbcon.php'); // Ensure this file contains your database connection logic
+        require('backend/dbcon.php'); // Ensure this file contains your database connection logic
 
-          // Query to fetch all categories
-          $categoryQuery = "SELECT category_id, category_name FROM book_categories";
-          $categoryResult = $con->query($categoryQuery);
+        // Query to fetch all categories
+        $categoryQuery = "SELECT category_id, category_name FROM book_categories";
+        $categoryResult = $con->query($categoryQuery);
 
-          // Check for errors
-          if ($categoryResult === false) {
-              die("Error fetching categories: " . $con->error);
-          }
-          ?>
+        // Check for errors
+        if ($categoryResult === false) {
+            die("Error fetching categories: " . $con->error);
+        }
+        ?>
 
         <!-- Update Book Modal -->
         <form id="updateBookForm">
@@ -265,11 +265,11 @@ session_start();
                                 <select class="form-select" id="update-category" name="category_id" required>
                                     <option value="" disabled selected>Select a category</option>
                                     <?php
-                            // Populate categories into the dropdown
-                            while ($categoryRow = $categoryResult->fetch_assoc()) {
-                                echo "<option value='" . htmlspecialchars($categoryRow['category_id']) . "'>" . htmlspecialchars($categoryRow['category_name']) . "</option>";
-                            }
-                            ?>
+                                    // Populate categories into the dropdown
+                                    while ($categoryRow = $categoryResult->fetch_assoc()) {
+                                        echo "<option value='" . htmlspecialchars($categoryRow['category_id']) . "'>" . htmlspecialchars($categoryRow['category_name']) . "</option>";
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -332,198 +332,198 @@ session_start();
     <script src="assets/js/jquery.min.js"></script>
 
     <script>
-    $(document).ready(function() {
-        document.getElementById('category').addEventListener('change', function() {
-            // Get the selected category id
-            var selectedId = this.value;
-            // Set the value of the hidden input field
-            document.getElementById('selectedCategoryId').value = selectedId;
-        });
-        // Handle form submission
-        $('#addBookForm').submit(function(event) {
-            event.preventDefault(); // Prevent default form submission
+        $(document).ready(function() {
+            document.getElementById('category').addEventListener('change', function() {
+                // Get the selected category id
+                var selectedId = this.value;
+                // Set the value of the hidden input field
+                document.getElementById('selectedCategoryId').value = selectedId;
+            });
+            // Handle form submission
+            $('#addBookForm').submit(function(event) {
+                event.preventDefault(); // Prevent default form submission
 
-            // Serialize form data
-            var formData = $(this).serialize();
+                // Serialize form data
+                var formData = $(this).serialize();
 
-            // AJAX request
-            $.ajax({
-                type: 'POST',
-                url: 'backend/add-book.php', // PHP script for book insertion
-                data: formData,
-                success: function(response) {
-                    if (response.includes('Book added successfully')) {
-                        // Show success message with SweetAlert
+                // AJAX request
+                $.ajax({
+                    type: 'POST',
+                    url: 'backend/add-book.php', // PHP script for book insertion
+                    data: formData,
+                    success: function(response) {
+                        if (response.includes('Book added successfully')) {
+                            // Show success message with SweetAlert
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Book added successfully',
+                                icon: 'success',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                $('#addBookForm')[0].reset(); // Reset form
+                                $('#addbook').modal('hide'); // Close modal
+                                setTimeout(() => location
+                                    .reload()); // Reload to reflect changes
+                            });
+                        } else {
+                            // Show warning if there is an issue (e.g., duplicate ISBN)
+                            Swal.fire({
+                                title: 'Warning!',
+                                text: response,
+                                icon: 'warning',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function() {
+                        // Handle error case
                         Swal.fire({
-                            title: 'Success!',
-                            text: 'Book added successfully',
-                            icon: 'success',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            $('#addBookForm')[0].reset(); // Reset form
-                            $('#addbook').modal('hide'); // Close modal
-                            setTimeout(() => location
-                                .reload()); // Reload to reflect changes
-                        });
-                    } else {
-                        // Show warning if there is an issue (e.g., duplicate ISBN)
-                        Swal.fire({
-                            title: 'Warning!',
-                            text: response,
-                            icon: 'warning',
+                            title: 'Error!',
+                            text: 'An error occurred. Please try again.',
+                            icon: 'error',
                             confirmButtonText: 'OK'
                         });
                     }
-                },
-                error: function() {
-                    // Handle error case
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'An error occurred. Please try again.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            });
-        });
-
-        // Clear form when the modal is closed
-        $('#addbook').on('hidden.bs.modal', function() {
-            $('#addBookForm')[0].reset();
-        });
-    });
-    </script>
-
-    <script>
-    // Listen for the modal close event
-    const addBookModal = document.getElementById('addbook');
-    const addBookForm = document.getElementById('addBookForm');
-
-    addBookModal.addEventListener('hidden.bs.modal', function() {
-        // Reset all form inputs when the modal is closed
-        addBookForm.reset();
-    });
-    </script>
-
-    <script>
-    // Handle form submission with AJAX
-    document.getElementById('updateBookForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent form submission
-
-        const formData = new FormData(this);
-
-        fetch('backend/update-book.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success alert using SweetAlert
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: data.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        location.reload(); // Reload the page to reflect changes
-                    });
-                } else {
-                    // Show error alert
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: data.message
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: 'An unexpected error occurred.'
                 });
             });
-    });
 
-    // Populate the update modal with book data
-    const updateBookModal = document.getElementById('updatebook');
-    updateBookModal.addEventListener('show.bs.modal', function(event) {
-    const button = event.relatedTarget; // Button that triggered the modal
-    const bookId = button.getAttribute('data-id');
-    const categoryId = button.getAttribute('data-category-id');
-    const categoryName = button.getAttribute('data-category-name'); // Get the category name
-
-    // Get the row to extract other book details
-    const row = button.closest('tr');
-
-    // Set the values in the modal input fields
-    document.getElementById('book-id').value = bookId;
-    document.getElementById('update-category').value = categoryId; // Set the selected category ID
-    document.getElementById('update-book-title').value = row.children[1]
-        .textContent; // Assuming title is in the second cell
-    document.getElementById('update-author').value = row.children[2].textContent;
-    document.getElementById('update-isbn').value = row.children[3].textContent;
-    document.getElementById('update-publisher').value = row.children[4].textContent;
-    document.getElementById('update-publication-year').value = row.children[5].textContent;
-    document.getElementById('update-location').value = row.children[6].textContent;
-    document.getElementById('update-copies').value = row.children[7].textContent;
-    document.getElementById('update-amount').value = row.children[8].textContent.replace(/₱|,/g, '')
-    .trim(); // Amount (remove currency symbol and format)
-    });
+            // Clear form when the modal is closed
+            $('#addbook').on('hidden.bs.modal', function() {
+                $('#addBookForm')[0].reset();
+            });
+        });
     </script>
 
     <script>
-    document.querySelectorAll('.btn-delete').forEach(button => {
-        button.addEventListener('click', function() {
-            const bookId = this.getAttribute('data-id');
+        // Listen for the modal close event
+        const addBookModal = document.getElementById('addbook');
+        const addBookForm = document.getElementById('addBookForm');
 
-            // SweetAlert confirmation before deleting
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This action cannot be undone!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // AJAX request to delete the book
-                    fetch('backend/delete-book.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                id: bookId
-                            })
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire(
-                                    'Deleted!',
-                                    data.message,
-                                    'success'
-                                ).then(() => {
-                                    location
-                                        .reload(); // Reload the page to reflect changes
-                                });
-                            } else {
-                                Swal.fire('Error!', data.message, 'error');
-                            }
-                        })
-                        .catch(error => {
-                            Swal.fire('Error!', 'Failed to delete the book.', 'error');
+        addBookModal.addEventListener('hidden.bs.modal', function() {
+            // Reset all form inputs when the modal is closed
+            addBookForm.reset();
+        });
+    </script>
+
+    <script>
+        // Handle form submission with AJAX
+        document.getElementById('updateBookForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent form submission
+
+            const formData = new FormData(this);
+
+            fetch('backend/update-book.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success alert using SweetAlert
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: data.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload(); // Reload the page to reflect changes
                         });
-                }
+                    } else {
+                        // Show error alert
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'An unexpected error occurred.'
+                    });
+                });
+        });
+
+        // Populate the update modal with book data
+        const updateBookModal = document.getElementById('updatebook');
+        updateBookModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const bookId = button.getAttribute('data-id');
+            const categoryId = button.getAttribute('data-category-id');
+            const categoryName = button.getAttribute('data-category-name'); // Get the category name
+
+            // Get the row to extract other book details
+            const row = button.closest('tr');
+
+            // Set the values in the modal input fields
+            document.getElementById('book-id').value = bookId;
+            document.getElementById('update-category').value = categoryId; // Set the selected category ID
+            document.getElementById('update-book-title').value = row.children[1]
+                .textContent; // Assuming title is in the second cell
+            document.getElementById('update-author').value = row.children[2].textContent;
+            document.getElementById('update-isbn').value = row.children[3].textContent;
+            document.getElementById('update-publisher').value = row.children[4].textContent;
+            document.getElementById('update-publication-year').value = row.children[5].textContent;
+            document.getElementById('update-location').value = row.children[6].textContent;
+            document.getElementById('update-copies').value = row.children[7].textContent;
+            document.getElementById('update-amount').value = row.children[8].textContent.replace(/₱|,/g, '')
+                .trim(); // Amount (remove currency symbol and format)
+        });
+    </script>
+
+    <script>
+        document.querySelectorAll('.btn-delete').forEach(button => {
+            button.addEventListener('click', function() {
+                const bookId = this.getAttribute('data-id');
+
+                // SweetAlert confirmation before deleting
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This action cannot be undone!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // AJAX request to delete the book
+                        fetch('backend/delete-book.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    id: bookId
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire(
+                                        'Deleted!',
+                                        data.message,
+                                        'success'
+                                    ).then(() => {
+                                        location
+                                            .reload(); // Reload the page to reflect changes
+                                    });
+                                } else {
+                                    Swal.fire('Error!', data.message, 'error');
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire('Error!', 'Failed to delete the book.', 'error');
+                            });
+                    }
+                });
             });
         });
-    });
     </script>
 
 </body>
