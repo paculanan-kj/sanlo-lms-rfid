@@ -7,7 +7,7 @@ $rfid = $_POST['rfid'] ?? '';
 
 if ($rfid) {
     // Query the database to check if the RFID matches a user
-    $stmt = $con->prepare("SELECT * FROM user WHERE rfid = ?");
+    $stmt = $conn->prepare("SELECT * FROM user WHERE rfid = ?");
     $stmt->bind_param("s", $rfid);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -17,12 +17,10 @@ if ($rfid) {
         echo json_encode(['status' => 'success']);
     } else {
         // RFID not found
-        echo json_encode(['status' => 'error']);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid RFID']);
     }
     $stmt->close();
 } else {
     // Invalid request
     echo json_encode(['status' => 'error', 'message' => 'Invalid RFID']);
 }
-
-$con->close();

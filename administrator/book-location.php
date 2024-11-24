@@ -34,6 +34,61 @@ session_start();
 
     <!-- Template Main CSS File -->
     <link href="assets/css/style.css" rel="stylesheet">
+    <style>
+        /* Style for the search input field */
+        #searchBook {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Style for the search results container */
+        #searchResults {
+            margin-top: 20px;
+        }
+
+        /* Style for the result book details */
+        .alert-info {
+            background-color: #d9f7e3;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(255, 0, 0, 0.2);
+        }
+
+        h2,
+        h3 {
+            margin: 5px 0;
+        }
+
+        /* Button style (if you have a search button) */
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 
 <body>
@@ -159,8 +214,11 @@ session_start();
             }
         });
 
-        // Function to fetch book location after selection
+        // Function to fetch book location and availability after selection
         function fetchBookLocation(bookTitle) {
+            // Clear the search input field
+            document.getElementById('searchBook').value = '';
+
             fetch('backend/search-book.php', {
                     method: 'POST',
                     headers: {
@@ -170,7 +228,12 @@ session_start();
                         title: bookTitle
                     })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Only parse as JSON if the response was successful
+                })
                 .then(data => {
                     const resultsDiv = document.getElementById('searchResults');
                     resultsDiv.innerHTML = ''; // Clear previous results
@@ -178,12 +241,19 @@ session_start();
                     if (data.success) {
                         const bookDetails = document.createElement('div');
                         bookDetails.classList.add('alert', 'alert-info');
-                        bookDetails.innerHTML = `<h2>Title: ${data.book.title}</h2> <br>
-                                     <h2>Location: ${data.book.location}</h2> `;
+                        bookDetails.innerHTML = `
+                <h2>Title: ${data.book.title}</h2>
+                <h2>Location: ${data.book.location}</h2>
+                <h3>Status: <strong>${data.book.availability}</strong></h3>
+            `;
                         resultsDiv.appendChild(bookDetails);
                     } else {
                         resultsDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
                     }
+                })
+                .catch(error => {
+                    const resultsDiv = document.getElementById('searchResults');
+                    resultsDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
                 });
         }
     </script>
