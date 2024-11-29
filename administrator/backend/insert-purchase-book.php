@@ -55,7 +55,7 @@ try {
     // Insert each book as a purchase detail
     foreach ($bookRows as $row) {
         // Get book_id from title
-        $book_query = "SELECT book_id FROM book WHERE title = ?";
+        $book_query = "SELECT book_id, copies FROM book WHERE title = ?";
         $book_stmt = $con->prepare($book_query);
         $book_stmt->bind_param("s", $row['title']);
         $book_stmt->execute();
@@ -66,12 +66,27 @@ try {
         }
 
         $book_id = $book_result['book_id'];
+        $current_copies = $book_result['copies'];
         $quantity = $row['quantity'];
 
+        if ($current_copies < $quantity) {
+            throw new Exception("Insufficient copies for book: " . $row['title']);
+        }
+
+        // Insert purchase detail
         $detail_stmt->bind_param("iii", $purchase_id, $book_id, $quantity);
 
         if (!$detail_stmt->execute()) {
             throw new Exception("Failed to insert purchase detail: " . $detail_stmt->error);
+        }
+
+        // Update book copies
+        $update_query = "UPDATE book SET copies = copies - ? WHERE book_id = ?";
+        $update_stmt = $con->prepare($update_query);
+        $update_stmt->bind_param("ii", $quantity, $book_id);
+
+        if (!$update_stmt->execute()) {
+            throw new Exception("Failed to update book copies: " . $update_stmt->error);
         }
     }
 
