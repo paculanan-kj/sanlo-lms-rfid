@@ -1,13 +1,12 @@
 <?php
 include 'backend/dbcon.php'; // Include database connection
 
-// Get user_id from the URL
-$userId = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
+// Decode user_id from the URL if it's Base64 encoded
+$userId = isset($_GET['user_id']) ? base64_decode(urldecode($_GET['user_id'])) : null;
 
 if ($userId) {
   // Fetch user's first name, last name, profile picture, and user role
   $stmt = $con->prepare("SELECT firstname, middlename, lastname, profile_picture, userrole FROM user WHERE user_id = ?");
-
   $stmt->bind_param("i", $userId);
   $stmt->execute();
   $result = $stmt->get_result();
@@ -17,27 +16,29 @@ if ($userId) {
       $user = $result->fetch_assoc();
       $firstname = htmlspecialchars($user['firstname']);
       $middlename = htmlspecialchars($user['middlename']);
-      $lastname = htmlspecialchars($user['lastname']); // Fetch last name
+      $lastname = htmlspecialchars($user['lastname']);
       $profilePicture = htmlspecialchars($user['profile_picture'] ?? 'default.png');
       $userrole = htmlspecialchars($user['userrole'] ?? 'User'); // Default role if not set
 
       // Combine first and last name
-      $fullname = $firstname . ' ' . $middlename . ' ' . $lastname; // Create full name
+      $fullname = $firstname . ' ' . $middlename . ' ' . $lastname;
     } else {
-      /* No user found: destroy session and redirect
-      session_destroy(); // Destroy the session
-      header("Location: ../index.php"); // Redirect to the login page
-      exit(); // Exit to ensure no further code is executed*/
+      // No user found: handle accordingly (optional: session destroy and redirect)
+      // session_destroy();
+      // header("Location: ../index.php");
+      // exit();
     }
   } else {
-    /*session_destroy(); // Destroy the session
-    header("Location: ../index.php"); // Redirect to the login page
-    exit();*/
+    // Error in fetching data: handle accordingly (optional: session destroy and redirect)
+    // session_destroy();
+    // header("Location: ../index.php");
+    // exit();
   }
 } else {
-  /*session_destroy(); // Destroy the session
-  header("Location: ../index.php"); // Redirect to the login page
-  exit();*/
+  // Invalid or missing user_id: handle accordingly (optional: session destroy and redirect)
+  // session_destroy();
+  // header("Location: ../index.php");
+  // exit();
 }
 ?>
 
@@ -93,7 +94,6 @@ if ($userId) {
               <span>Sign Out</span>
             </a>
           </li>
-
         </ul><!-- End Profile Dropdown Items -->
       </li><!-- End Profile Nav -->
     </ul>

@@ -1,5 +1,32 @@
 <?php
 session_start();
+
+// Set timeout to 1 minute (60 seconds)
+$timeout_duration = 60;
+
+// Check if user is logged in
+if (isset($_SESSION['username']) && isset($_SESSION['user_id'])) {
+  // Check if session has expired
+  if (isset($_SESSION['last_activity'])) {
+    $session_lifetime = time() - $_SESSION['last_activity'];
+
+    if ($session_lifetime > $timeout_duration) {
+      // Destroy session if timed out
+      session_unset();
+      session_destroy();
+    }
+  }
+
+  // Update last activity time
+  $_SESSION['last_activity'] = time();
+}
+
+// Handle AJAX timeout check
+if (isset($_GET['check_timeout'])) {
+  header('Content-Type: application/json');
+  echo json_encode(['timeout' => $session_lifetime > $timeout_duration]);
+  exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -224,6 +251,30 @@ session_start();
   <script src="assets/js/main.js"></script>
   <script src="assets/js/jquery.min.js"></script>
 
+  <script>
+    function checkSessionTimeout() {
+      fetch('backend/session.php?check_timeout=true')
+        .then(response => response.json())
+        .then(data => {
+          if (data.timeout) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Session Expired',
+              text: 'Your session has ended. Please log in again.',
+              confirmButtonText: 'OK'
+            }).then(() => {
+              window.location.href = '../index.php';
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Session timeout check failed:', error);
+        });
+    }
+
+    // Check every 30 seconds
+    setInterval(checkSessionTimeout, 30000);
+  </script>
 </body>
 
 </html>

@@ -715,6 +715,7 @@ session_start();
             });
         });
     </script>
+
     <script>
         // Form Submission Handling
         const form = document.getElementById('addBookBorrowForm');

@@ -6,6 +6,19 @@ header('Content-Type: application/json'); // Ensure JSON response
 $response = [];
 $secretKey = 'SanLorenzoSchoolofPolomolokInc.'; // Same secret key used during user creation
 
+if (isset($_SESSION['timeout']) && $_SESSION['timeout'] == true) {
+    // Clear the timeout session variable after checking
+    unset($_SESSION['timeout']);
+    // Set a timeout flag for SweetAlert on the frontend
+    $response = [
+        'success' => false,
+        'message' => 'Session timeout. Please log in again.',
+        'timeout' => true
+    ];
+    echo json_encode($response);
+    exit(); // Exit after setting the response
+}
+
 if (isset($_POST['rfid']) && !empty($_POST['rfid'])) {
     // RFID Login Logic
     $rfid = $_POST['rfid'];
@@ -21,10 +34,13 @@ if (isset($_POST['rfid']) && !empty($_POST['rfid'])) {
             $_SESSION['username'] = $row['username'];
             $_SESSION['user_id'] = $row['user_id'];
 
+            // Base64 encode the user_id
+            $encoded_user_id = base64_encode($_SESSION['user_id']);
+
             $response = [
                 'success' => true,
                 'message' => 'RFID login successful!',
-                'redirect_url' => 'administrator/student-logged.php?user_id=' . $_SESSION['user_id'],
+                'redirect_url' => 'administrator/student-logged.php?user_id=' . urlencode($encoded_user_id),
             ];
         } else {
             // RFID not found
@@ -61,10 +77,14 @@ if (isset($_POST['rfid']) && !empty($_POST['rfid'])) {
                     $_SESSION['username'] = $row['username'];
                     $_SESSION['user_id'] = $row['user_id'];
 
+                    // Base64 encode the user_id
+                    $encoded_user_id = base64_encode($_SESSION['user_id']);
+
+                    // Prepare the response with the encoded user_id
                     $response = [
                         'success' => true,
                         'message' => 'Login successful!',
-                        'redirect_url' => 'administrator/student-logged.php?user_id=' . $_SESSION['user_id'],
+                        'redirect_url' => 'administrator/student-logged.php?user_id=' . urlencode($encoded_user_id),
                     ];
                 } else {
                     $response = [

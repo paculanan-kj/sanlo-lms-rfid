@@ -38,39 +38,178 @@ include 'backend/dbcon.php';
     <link href="assets/sweet-alert/sweetalert2.min.css" rel="stylesheet">
 
     <style>
-    .suggestions-container {
-        position: absolute;
-        /* Ensure it's positioned correctly */
-        background: white;
-        /* Background color for better visibility */
-        z-index: 1000;
-        /* Ensure it appears above other elements */
-        max-height: 200px;
-        /* Optional: Set max height */
-        overflow-y: auto;
-        /* Optional: Scrollable suggestions */
-    }
+        .suggestions-container {
+            position: absolute;
+            /* Ensure it's positioned correctly */
+            background: white;
+            /* Background color for better visibility */
+            z-index: 1000;
+            /* Ensure it appears above other elements */
+            max-height: 200px;
+            /* Optional: Set max height */
+            overflow-y: auto;
+            /* Optional: Scrollable suggestions */
+        }
 
-    .suggestion-item {
-        padding: 10px;
-        /* Add some padding */
-        cursor: pointer;
-        /* Change cursor to pointer */
-    }
+        .suggestion-item {
+            padding: 10px;
+            /* Add some padding */
+            cursor: pointer;
+            /* Change cursor to pointer */
+        }
 
-    .suggestion-item:hover {
-        background-color: #f0f0f0;
-        /* Highlight on hover */
-    }
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+            /* Highlight on hover */
+        }
+
+        /* Style for the RFID scan text */
+        .scan-rfid-text {
+            font-size: 24px;
+            /* Font size */
+            font-weight: bold;
+            /* Bold text */
+            text-transform: uppercase;
+            /* All caps */
+            letter-spacing: 2px;
+            /* Slight spacing between letters */
+            text-align: center;
+            /* Center the text */
+            color: #ffffff;
+            /* White text color */
+            padding: 10px 20px;
+            /* Add some padding around the text */
+            background: linear-gradient(45deg, #007bff, #00d2ff);
+            /* Gradient background */
+            border-radius: 5px;
+            /* Rounded corners */
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4);
+            /* Subtle shadow */
+            animation: pulseText 2s infinite;
+            /* Apply animation */
+            display: inline-block;
+            /* Let it adjust with text */
+        }
+
+
+        .scan-rfid-text:hover {
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 30px rgba(0, 123, 255, 0.7);
+            /* Glowing text effect */
+            cursor: pointer;
+        }
+
+        /* Center Alignment for Scanner Rings and Icon */
+        .scanner-icon-container {
+            position: relative;
+            display: inline-block;
+            width: 120px;
+            /* Same width as the scanner rings */
+            height: 120px;
+            /* Same height as the scanner rings */
+        }
+
+        /* Pulsing RFID Icon */
+        .pulse-icon {
+            font-size: 80px;
+            /* Size of the RFID icon */
+            color: #007bff;
+            /* Bootstrap primary color */
+            animation: pulse 2s infinite ease-in-out;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Center the icon within the container */
+            z-index: 1;
+            /* Ensure the icon is above the scanner rings */
+        }
+
+        /* Animation for Pulsing */
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Scanner Rings for Animation */
+        .scanner-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Center the rings within the container */
+            width: 120px;
+            /* Same size as the container */
+            height: 120px;
+            /* Same size as the container */
+            border: 3px solid rgba(0, 123, 255, 0.3);
+            /* Softer primary color */
+            border-radius: 50%;
+            animation: scanner-ring 1.5s infinite;
+            z-index: 0;
+            /* Ensure the rings are behind the icon */
+        }
+
+        @keyframes scanner-ring {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Modal Header Styling */
+        .modal-header {
+            border-bottom: none;
+        }
+
+        /* Modal Body Padding */
+        .modal-body {
+            padding: 2rem;
+        }
+
+        /* Cancel Button Customization */
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+
+        /* Error Message Styling */
+        #rfidError {
+            display: none;
+            font-weight: 500;
+            font-size: 1rem;
+        }
     </style>
 
 </head>
 
 <body>
     <?php
-  include 'inc/navbar.php';
-  include 'inc/sidebar.php';
-  ?>
+    include 'inc/navbar.php';
+    include 'inc/sidebar.php';
+    ?>
     <main id="main" class="main">
 
         <div class="pagetitle">
@@ -109,8 +248,8 @@ include 'backend/dbcon.php';
                             </thead>
                             <tbody>
                                 <?php
-            // SQL query to join tables and include student image
-            $sql = "SELECT bb.book_borrow_id, 
+                                // SQL query to join tables and include student image
+                                $sql = "SELECT bb.book_borrow_id, 
                     CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name, 
                     s.gradelevel,
                     s.picture,
@@ -123,46 +262,46 @@ include 'backend/dbcon.php';
                     JOIN book b ON bb.book_id = b.book_id
                     WHERE bb.quantity > 0 ORDER BY bb.book_id DESC"; // Exclude entries with quantity 0
 
-            $result = $con->query($sql);
+                                $result = $con->query($sql);
 
-            if ($result === false) {
-                echo "<tr><td colspan='7'>Error: " . $con->error . "</td></tr>";
-            } elseif ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    $picturePath = 'uploads/' . $row['picture']; // Adjust this path based on your folder structure
-                    
-                    echo "<tr>";
-                    echo "<td>";
-                    echo "<div class='d-flex align-items-center'>";
-                    echo "<img src='" . htmlspecialchars($picturePath) . "' alt='Student Image' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
-                    echo "<span>" . htmlspecialchars($row['student_name']) . "</span>";
-                    echo "</div>";
-                    echo "</td>";
-                    echo "<td>" . htmlspecialchars($row['gradelevel']) . "</td>";
-                    echo "<td>" . htmlspecialchars($row['book_title']) . "</td>";
-                    echo "<td><span class='badge bg-info'>" . htmlspecialchars($row['quantity']) . "</span></td>";
+                                if ($result === false) {
+                                    echo "<tr><td colspan='7'>Error: " . $con->error . "</td></tr>";
+                                } elseif ($result->num_rows > 0) {
+                                    while ($row = $result->fetch_assoc()) {
+                                        $picturePath = 'uploads/' . $row['picture']; // Adjust this path based on your folder structure
 
-                    if ($row['status'] === 'borrowed') {
-                        echo "<td><span class='badge bg-warning'>Borrowed</span></td>";
-                    } else {
-                        echo "<td><span class='badge bg-secondary'>" . htmlspecialchars($row['status']) . "</span></td>";
-                    }
+                                        echo "<tr>";
+                                        echo "<td>";
+                                        echo "<div class='d-flex align-items-center'>";
+                                        echo "<img src='" . htmlspecialchars($picturePath) . "' alt='Student Image' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
+                                        echo "<span>" . htmlspecialchars($row['student_name']) . "</span>";
+                                        echo "</div>";
+                                        echo "</td>";
+                                        echo "<td>" . htmlspecialchars($row['gradelevel']) . "</td>";
+                                        echo "<td>" . htmlspecialchars($row['book_title']) . "</td>";
+                                        echo "<td><span class='badge bg-info'>" . htmlspecialchars($row['quantity']) . "</span></td>";
 
-                    $createdAt = new DateTime($row['created_at']);
-                    echo "<td>" . $createdAt->format('F j, Y, g:i a') . "</td>";
+                                        if ($row['status'] === 'borrowed') {
+                                            echo "<td><span class='badge bg-warning'>Borrowed</span></td>";
+                                        } else {
+                                            echo "<td><span class='badge bg-secondary'>" . htmlspecialchars($row['status']) . "</span></td>";
+                                        }
 
-                    echo "<td>";
-                    echo "<button type='button' class='btn btn-success btn-sm' data-bs-toggle='modal' data-bs-target='#returnModal' data-id='" . $row['book_borrow_id'] . "'>Return</button> ";
-                    echo "<button type='button' class='btn btn-primary btn-sm' data-bs-toggle='modal' data-bs-target='#editModal' data-id='" . $row['book_borrow_id'] . "'>Edit</button> ";
-                    echo "</td>";
-                    echo "</tr>";
-                }
-            } else {
-                echo "<tr><td colspan='7'>No records found.</td></tr>";
-            }
+                                        $createdAt = new DateTime($row['created_at']);
+                                        echo "<td>" . $createdAt->format('F j, Y, g:i a') . "</td>";
 
-            $con->close();
-        ?>
+                                        echo "<td>";
+                                        echo "<button type='button' class='btn btn-success btn-sm' data-bs-toggle='modal' data-bs-target='#returnModal' data-id='" . $row['book_borrow_id'] . "'>Return</button> ";
+                                        echo "<button type='button' class='btn btn-primary btn-sm' data-bs-toggle='modal' data-bs-target='#editModal' data-id='" . $row['book_borrow_id'] . "'>Edit</button> ";
+                                        echo "</td>";
+                                        echo "</tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='7'>No records found.</td></tr>";
+                                }
+
+                                $con->close();
+                                ?>
                             </tbody>
                         </table>
 
@@ -314,8 +453,6 @@ include 'backend/dbcon.php';
         </div>
 
 
-
-
     </main><!-- End #main -->
 
     <!-- Vendor JS Files -->
@@ -334,374 +471,375 @@ include 'backend/dbcon.php';
     <script src="assets/js/jquery-3.6.0.min.js"></script>
 
     <script>
-    // Automatically focus RFID input field when the modal is shown
-    document.addEventListener('DOMContentLoaded', function() {
-        const borrowModal = document.getElementById('borrowModal');
-        const inputRfid = document.getElementById('inputRfid');
+        // Automatically focus RFID input field when the modal is shown
+        document.addEventListener('DOMContentLoaded', function() {
+            const borrowModal = document.getElementById('borrowModal');
+            const inputRfid = document.getElementById('inputRfid');
 
-        borrowModal.addEventListener('shown.bs.modal', function() {
-            inputRfid.focus();
+            borrowModal.addEventListener('shown.bs.modal', function() {
+                inputRfid.focus();
+            });
         });
-    });
-    document.getElementById('inputRfid').addEventListener('input', function() {
-        const profilePicture = document.getElementById('profilePicture');
+        document.getElementById('inputRfid').addEventListener('input', function() {
+            const profilePicture = document.getElementById('profilePicture');
 
-        // Assuming the RFID scan populates other fields, we show the profile picture.
-        if (this.value) {
-            profilePicture.style.display = 'block'; // Show the profile picture
-        } else {
-            profilePicture.style.display = 'none'; // Hide if RFID input is cleared
-        }
-    });
+            // Assuming the RFID scan populates other fields, we show the profile picture.
+            if (this.value) {
+                profilePicture.style.display = 'block'; // Show the profile picture
+            } else {
+                profilePicture.style.display = 'none'; // Hide if RFID input is cleared
+            }
+        });
     </script>
 
     <script>
-    document.getElementById('BorrowBook').addEventListener('input', function() {
-        const searchTerm = this.value;
+        document.getElementById('BorrowBook').addEventListener('input', function() {
+            const searchTerm = this.value;
 
-        // Check if the input is not empty
-        if (searchTerm.length > 2) { // Trigger after 2 characters
-            fetch(`backend/fetch-books.php?term=${encodeURIComponent(searchTerm)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const suggestionsContainer = document.getElementById('bookSuggestions');
-                    suggestionsContainer.innerHTML = ''; // Clear previous suggestions
-                    suggestionsContainer.style.display = data.length ? 'block' :
-                        'none'; // Show or hide the suggestions container
+            // Check if the input is not empty
+            if (searchTerm.length > 2) { // Trigger after 2 characters
+                fetch(`backend/fetch-books.php?term=${encodeURIComponent(searchTerm)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const suggestionsContainer = document.getElementById('bookSuggestions');
+                        suggestionsContainer.innerHTML = ''; // Clear previous suggestions
+                        suggestionsContainer.style.display = data.length ? 'block' :
+                            'none'; // Show or hide the suggestions container
 
-                    if (data.length > 0) {
-                        data.forEach(book => {
-                            const suggestionItem = document.createElement('div');
-                            suggestionItem.className = 'suggestion-item';
-                            suggestionItem.textContent = book.title; // Display book title
-                            suggestionItem.dataset.id = book.book_id; // Store the book id
+                        if (data.length > 0) {
+                            data.forEach(book => {
+                                const suggestionItem = document.createElement('div');
+                                suggestionItem.className = 'suggestion-item';
+                                suggestionItem.textContent = book.title; // Display book title
+                                suggestionItem.dataset.id = book.book_id; // Store the book id
 
-                            // Add click event to select the book
-                            suggestionItem.addEventListener('click', function() {
-                                console.log('Suggestion clicked:', this
-                                    .textContent); // Debug log
-                                document.getElementById('BorrowBook').value = this
-                                    .textContent; // Set input value
-                                document.getElementById('bookId').value = this.dataset
-                                    .id; // Store selected book ID
+                                // Add click event to select the book
+                                suggestionItem.addEventListener('click', function() {
+                                    console.log('Suggestion clicked:', this
+                                        .textContent); // Debug log
+                                    document.getElementById('BorrowBook').value = this
+                                        .textContent; // Set input value
+                                    document.getElementById('bookId').value = this.dataset
+                                        .id; // Store selected book ID
 
-                                // Clear and hide suggestions after selection
-                                suggestionsContainer.innerHTML = ''; // Clear suggestions
-                                suggestionsContainer.style.display =
-                                    'none'; // Hide suggestions after selection
+                                    // Clear and hide suggestions after selection
+                                    suggestionsContainer.innerHTML = ''; // Clear suggestions
+                                    suggestionsContainer.style.display =
+                                        'none'; // Hide suggestions after selection
+                                });
+
+                                suggestionsContainer.appendChild(suggestionItem);
                             });
+                        } else {
+                            suggestionsContainer.innerHTML = '<div>No books found</div>'; // No results
+                        }
+                    })
+                    .catch(error => console.error('Error fetching books:', error));
+            } else {
+                document.getElementById('bookSuggestions').style.display =
+                    'none'; // Hide suggestions if input is less than 3 characters
+            }
+        });
 
-                            suggestionsContainer.appendChild(suggestionItem);
-                        });
-                    } else {
-                        suggestionsContainer.innerHTML = '<div>No books found</div>'; // No results
-                    }
-                })
-                .catch(error => console.error('Error fetching books:', error));
-        } else {
-            document.getElementById('bookSuggestions').style.display =
-                'none'; // Hide suggestions if input is less than 3 characters
-        }
-    });
+        // Reset inputs when the modal is closed
+        const borrowModal = document.getElementById('borrowModal');
+        borrowModal.addEventListener('hidden.bs.modal', function() {
+            // Reset all input fields
+            document.getElementById('addBookBorrowForm').reset(); // Reset the form
+            document.getElementById('bookSuggestions').innerHTML = ''; // Clear suggestions
+            document.getElementById('bookSuggestions').style.display = 'none'; // Hide suggestions
 
-    // Reset inputs when the modal is closed
-    const borrowModal = document.getElementById('borrowModal');
-    borrowModal.addEventListener('hidden.bs.modal', function() {
-        // Reset all input fields
-        document.getElementById('addBookBorrowForm').reset(); // Reset the form
-        document.getElementById('bookSuggestions').innerHTML = ''; // Clear suggestions
-        document.getElementById('bookSuggestions').style.display = 'none'; // Hide suggestions
-
-        // Reset the profile picture
-        const profilePicture = document.getElementById('profilePicture');
-        profilePicture.src = ''; // Clear the image source
-        profilePicture.style.display = 'none'; // Hide the image
-    });
+            // Reset the profile picture
+            const profilePicture = document.getElementById('profilePicture');
+            profilePicture.src = ''; // Clear the image source
+            profilePicture.style.display = 'none'; // Hide the image
+        });
     </script>
 
     <script>
-    let rfidTimeout;
-    let rfidData = "";
+        let rfidTimeout;
+        let rfidData = "";
 
-    // Prevent form submission
-    document.getElementById('addBookBorrowForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission
-    });
+        // Prevent form submission
+        document.getElementById('addBookBorrowForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+        });
 
-    // Listen for keydown events to capture RFID input
-    document.addEventListener('keydown', function(event) {
-        const borrowModal = document.getElementById('borrowModal');
+        // Listen for keydown events to capture RFID input
+        document.addEventListener('keydown', function(event) {
+            const borrowModal = document.getElementById('borrowModal');
 
-        // Ensure input only captures when the modal is open
-        if (borrowModal.classList.contains('show')) {
-            // If Enter key is pressed, process the RFID data
-            if (event.key === 'Enter') {
-                clearTimeout(rfidTimeout); // Clear any existing timeout
+            // Ensure input only captures when the modal is open
+            if (borrowModal.classList.contains('show')) {
+                // If Enter key is pressed, process the RFID data
+                if (event.key === 'Enter') {
+                    clearTimeout(rfidTimeout); // Clear any existing timeout
 
-                const rfid = rfidData.trim();
-                if (rfid) {
-                    fetch('backend/fetch-student-borrow.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                rfid
-                            }),
-                        })
-                        .then((response) => response.json())
-                        .then((data) => {
-                            if (data.success) {
-                                const student = data.student;
-                                document.getElementById('studentId').value = student.student_id;
-                                document.getElementById('studentName').value = student.full_name;
-                                document.getElementById('gradeLevel').value = student.grade_level;
+                    const rfid = rfidData.trim();
+                    if (rfid) {
+                        fetch('backend/fetch-student-borrow.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    rfid
+                                }),
+                            })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (data.success) {
+                                    const student = data.student;
+                                    document.getElementById('studentId').value = student.student_id;
+                                    document.getElementById('studentName').value = student.full_name;
+                                    document.getElementById('gradeLevel').value = student.grade_level;
 
-                                // Set the image source and make it visible
-                                document.getElementById('profilePicture').src = student.profile_picture;
-                                document.getElementById('profilePicture').style.display = 'block';
+                                    // Set the image source and make it visible
+                                    document.getElementById('profilePicture').src = student.profile_picture;
+                                    document.getElementById('profilePicture').style.display = 'block';
 
-                                // Store the image path in a hidden input
-                                document.getElementById('profilePictureInput').value = student
-                                    .profile_picture;
-                            } else {
+                                    // Store the image path in a hidden input
+                                    document.getElementById('profilePictureInput').value = student
+                                        .profile_picture;
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Oops!',
+                                        text: data.message || 'Student not found.',
+                                    });
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('Error fetching student data:', error);
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Oops!',
-                                    text: data.message || 'Student not found.',
+                                    title: 'Error!',
+                                    text: 'An error occurred while fetching the student data.',
                                 });
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error fetching student data:', error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: 'An error occurred while fetching the student data.',
                             });
-                        });
+                    }
+
+                    rfidData = ""; // Clear rfidData for the next scan
+                } else {
+                    // Accumulate characters in rfidData
+                    rfidData += event.key;
+
+                    // Clear any previous timeout to debounce input
+                    clearTimeout(rfidTimeout);
+
+                    // Set a new timeout to clear rfidData if no activity occurs
+                    rfidTimeout = setTimeout(() => {
+                        rfidData = ""; // Clear the input if no Enter key is detected in 300 ms
+                    }, 300);
                 }
-
-                rfidData = ""; // Clear rfidData for the next scan
-            } else {
-                // Accumulate characters in rfidData
-                rfidData += event.key;
-
-                // Clear any previous timeout to debounce input
-                clearTimeout(rfidTimeout);
-
-                // Set a new timeout to clear rfidData if no activity occurs
-                rfidTimeout = setTimeout(() => {
-                    rfidData = ""; // Clear the input if no Enter key is detected in 300 ms
-                }, 300);
             }
-        }
-    });
+        });
     </script>
 
     <script>
-    document.getElementById('addBookBorrowForm').addEventListener('submit', function(event) {
-        event.preventDefault();
+        document.getElementById('addBookBorrowForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-        const formData = {
-            book_id: document.getElementById('bookId').value,
-            student_id: document.getElementById('studentId').value,
-            quantity: document.getElementById('bookQuantity').value,
-            status: 'borrowed' // You can modify the status as needed
-        };
+            // Collect form data
+            const formData = {
+                book_id: document.getElementById('bookId').value,
+                student_id: document.getElementById('studentId').value,
+                quantity: document.getElementById('bookQuantity').value,
+                status: 'borrowed',
+            };
 
-        fetch('backend/insert-book-borrow.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
+            try {
+                // Directly send data to insert-book-borrow.php without RFID validation
+                const response = await fetch('backend/insert-book-borrow.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                const data = await response.json();
+
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
-                        text: 'Book borrow record added successfully!'
+                        text: 'Book borrow record added successfully!',
                     }).then(() => {
-                        // Reset the form
                         location.reload();
-                        document.getElementById('addBookBorrowForm').reset();
-                        document.getElementById('borrowModal').classList.remove('show');
                     });
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: data.message || 'Failed to add the record. Please try again.'
+                        text: data.message || 'Failed to add the record. Please try again.',
                     });
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'An unexpected error occurred. Please try again.'
+                    text: 'An unexpected error occurred. Please try again.',
                 });
-            });
-    });
-    </script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Event listener for the return button
-        const returnButtons = document.querySelectorAll('.btn-success');
-        returnButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const bookBorrowId = this.getAttribute('data-id');
-                document.getElementById('book_borrow_id').value = bookBorrowId;
-            });
-        });
-
-        // Event listener for the submit return button
-        document.getElementById('submitReturn').addEventListener('click', function() {
-            const form = document.getElementById('returnForm');
-            const formData = new FormData(form);
-
-            // Sending data to the backend
-            fetch('backend/return-book.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: 'Book returned successfully!',
-                        }).then(() => {
-                            // Refresh the page after closing the alert
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Error returning book: ' + data.message,
-                        });
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
-
-        // Reset form inputs when the modal is closed
-        const returnModal = document.getElementById('returnModal');
-        returnModal.addEventListener('hidden.bs.modal', function() {
-            document.getElementById('returnForm').reset(); // Reset the form inputs
-        });
-    });
-    </script>
-
-    <script>
-    $(document).on('click', '.btn-primary', function() {
-        var book_borrow_id = $(this).data('id');
-
-        // AJAX request to fetch the data and book list
-        $.ajax({
-            url: 'backend/fetch-book-borrow.php',
-            type: 'POST',
-            data: {
-                book_borrow_id: book_borrow_id
-            },
-            dataType: 'json',
-            success: function(data) {
-                console.log(data); // Debugging line
-                if (data.success) {
-                    // Clear previous values
-                    $('#edit_book_borrow_id').val(''); // Clear hidden input for book_borrow_id
-                    $('#edit_quantity').val(''); // Clear previous value for quantity
-
-                    // Set new values using the updated IDs
-                    $('#edit_book_borrow_id').val(data.record.book_borrow_id);
-                    $('#edit_student_name').val(data.record.student_name);
-                    $('#edit_grade_level').val(data.record.gradelevel);
-                    $('#edit_quantity').val(data.record.quantity);
-
-                    // Populate the book dropdown
-                    populateBookDropdown(data.books, data.record.book_id);
-
-                    // Show the modal
-                    console.log('Before modal show');
-                    $('#editModal').modal('show'); // Ensure the modal is displayed
-                    console.log('After modal show');
-                } else {
-                    alert(data.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
             }
         });
-    });
+    </script>
 
-    // Function to populate book dropdown
-    function populateBookDropdown(books, selectedBookId) {
-        const $dropdown = $('#edit_book_title'); // Updated to new ID
-        $dropdown.empty(); // Clear existing options
-        $.each(books, function(index, book) {
-            $dropdown.append($('<option></option>').attr('value', book.book_id).text(book.title));
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listener for the return button
+            const returnButtons = document.querySelectorAll('.btn-success');
+            returnButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const bookBorrowId = this.getAttribute('data-id');
+                    document.getElementById('book_borrow_id').value = bookBorrowId;
+                });
+            });
+
+            // Event listener for the submit return button
+            document.getElementById('submitReturn').addEventListener('click', function() {
+                const form = document.getElementById('returnForm');
+                const formData = new FormData(form);
+
+                // Sending data to the backend
+                fetch('backend/return-book.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Book returned successfully!',
+                            }).then(() => {
+                                // Refresh the page after closing the alert
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: 'Error returning book: ' + data.message,
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+
+            // Reset form inputs when the modal is closed
+            const returnModal = document.getElementById('returnModal');
+            returnModal.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('returnForm').reset(); // Reset the form inputs
+            });
         });
-        $dropdown.val(selectedBookId); // Set selected book
+    </script>
 
-        // Initialize Select2 for the dropdown if you're using it
-        $dropdown.select2({
-            placeholder: "Select a book",
-            allowClear: true,
-        });
-    }
+    <script>
+        $(document).on('click', '.btn-primary', function() {
+            var book_borrow_id = $(this).data('id');
 
-
-    $(document).ready(function() {
-        // Handle the update button click event
-        $('#updateButton').on('click', function() {
-            console.log("Update button clicked");
-
-            // Serialize the form data
-            var formData = $('#updateForm').serialize();
-            console.log("Form data:", formData);
-
-            // AJAX call to update the record
+            // AJAX request to fetch the data and book list
             $.ajax({
+                url: 'backend/fetch-book-borrow.php',
                 type: 'POST',
-                url: 'backend/update-book-borrow.php', // Path to your PHP script
-                data: formData,
-                success: function(response) {
-                    console.log("AJAX response:",
-                        response); // Log the response for debugging
-                    var result = JSON.parse(response); // Parse the JSON response
+                data: {
+                    book_borrow_id: book_borrow_id
+                },
+                dataType: 'json',
+                success: function(data) {
+                    console.log(data); // Debugging line
+                    if (data.success) {
+                        // Clear previous values
+                        $('#edit_book_borrow_id').val(''); // Clear hidden input for book_borrow_id
+                        $('#edit_quantity').val(''); // Clear previous value for quantity
 
-                    if (result.success) {
-                        Swal.fire("Updated!", result.message, "success").then(() => {
-                            // Refresh the page to see the changes
-                            location.reload(); // This will reload the entire page
-                        });
+                        // Set new values using the updated IDs
+                        $('#edit_book_borrow_id').val(data.record.book_borrow_id);
+                        $('#edit_student_name').val(data.record.student_name);
+                        $('#edit_grade_level').val(data.record.gradelevel);
+                        $('#edit_quantity').val(data.record.quantity);
+
+                        // Populate the book dropdown
+                        populateBookDropdown(data.books, data.record.book_id);
+
+                        // Show the modal
+                        console.log('Before modal show');
+                        $('#editModal').modal('show'); // Ensure the modal is displayed
+                        console.log('After modal show');
                     } else {
-                        Swal.fire("Error!", result.message,
-                            "error"); // Display error message
+                        alert(data.message);
                     }
                 },
-                error: function(xhr) {
-                    console.error("AJAX error occurred:", xhr
-                        .responseText); // Log any error response
-                    Swal.fire("Error!", 'Error updating record. Please try again.',
-                        "error"); // Display error alert
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
                 }
             });
         });
-    });
+
+        // Function to populate book dropdown
+        function populateBookDropdown(books, selectedBookId) {
+            const $dropdown = $('#edit_book_title'); // Updated to new ID
+            $dropdown.empty(); // Clear existing options
+            $.each(books, function(index, book) {
+                $dropdown.append($('<option></option>').attr('value', book.book_id).text(book.title));
+            });
+            $dropdown.val(selectedBookId); // Set selected book
+
+            // Initialize Select2 for the dropdown if you're using it
+            $dropdown.select2({
+                placeholder: "Select a book",
+                allowClear: true,
+            });
+        }
+
+
+        $(document).ready(function() {
+            // Handle the update button click event
+            $('#updateButton').on('click', function() {
+                console.log("Update button clicked");
+
+                // Serialize the form data
+                var formData = $('#updateForm').serialize();
+                console.log("Form data:", formData);
+
+                // AJAX call to update the record
+                $.ajax({
+                    type: 'POST',
+                    url: 'backend/update-book-borrow.php', // Path to your PHP script
+                    data: formData,
+                    success: function(response) {
+                        console.log("AJAX response:",
+                            response); // Log the response for debugging
+                        var result = JSON.parse(response); // Parse the JSON response
+
+                        if (result.success) {
+                            Swal.fire("Updated!", result.message, "success").then(() => {
+                                // Refresh the page to see the changes
+                                location.reload(); // This will reload the entire page
+                            });
+                        } else {
+                            Swal.fire("Error!", result.message,
+                                "error"); // Display error message
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error("AJAX error occurred:", xhr
+                            .responseText); // Log any error response
+                        Swal.fire("Error!", 'Error updating record. Please try again.',
+                            "error"); // Display error alert
+                    }
+                });
+            });
+        });
     </script>
 
 

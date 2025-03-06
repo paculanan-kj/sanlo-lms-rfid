@@ -1,6 +1,14 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);  // Get the current page name
+
+// Decode user_id if it's Base64 encoded
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
+if (isset($_GET['user_id'])) {
+    // Base64 decode the user_id from the query string
+    $decoded_user_id = base64_decode(urldecode($_GET['user_id']));
+} else {
+    $decoded_user_id = $user_id;
+}
 ?>
 
 <!-- ======= Sidebar ======= -->
@@ -10,7 +18,7 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
 
         <li class="nav-item">
             <a class="nav-link <?php echo ($current_page == 'student-logged.php') ? 'active' : ''; ?>"
-                href="student-logged.php?user_id=<?php echo $user_id; ?>">
+                href="student-logged.php?user_id=<?php echo base64_encode($decoded_user_id); ?>">
                 <i class="bi bi-box-arrow-in-right"></i>
                 <span>Student Logged In</span>
             </a>
@@ -28,13 +36,13 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                 class="nav-content collapse <?php echo ($current_page == 'borrow-book.php' || $current_page == 'returned-book.php') ? 'show' : ''; ?>"
                 data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="borrow-book.php?user_id=<?php echo $user_id; ?>"
+                    <a href="borrow-book.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'borrow-book.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Borrow</span>
                     </a>
                 </li>
                 <li>
-                    <a href="returned-book.php?user_id=<?php echo $user_id; ?>"
+                    <a href="returned-book.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'returned-book.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Return</span>
                     </a>
@@ -54,13 +62,13 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                 class="nav-content collapse <?php echo ($current_page == 'borrow-equipment.php' || $current_page == 'returned-equipment.php') ? 'show' : ''; ?>"
                 data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="borrow-equipment.php?user_id=<?php echo $user_id; ?>"
+                    <a href="borrow-equipment.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'borrow-equipment.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Borrow</span>
                     </a>
                 </li>
                 <li>
-                    <a href="returned-equipment.php?user_id=<?php echo $user_id; ?>"
+                    <a href="returned-equipment.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'returned-equipment.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Return</span>
                     </a>
@@ -80,25 +88,25 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                 class="nav-content collapse <?php echo ($current_page == 'manage-book.php' || $current_page == 'book-availability.php' || $current_page == 'book-location.php' || $current_page == 'book-category.php') ? 'show' : ''; ?>"
                 data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="manage-book.php?user_id=<?php echo $user_id; ?>"
+                    <a href="manage-book.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'manage-book.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Manage Books</span>
                     </a>
                 </li>
                 <li>
-                    <a href="book-availability.php?user_id=<?php echo $user_id; ?>"
+                    <a href="book-availability.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'book-availability.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Availability</span>
                     </a>
                 </li>
                 <li>
-                    <a href="book-location.php?user_id=<?php echo $user_id; ?>"
+                    <a href="book-location.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'book-location.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Location</span>
                     </a>
                 </li>
                 <li>
-                    <a href="book-category.php?user_id=<?php echo $user_id; ?>"
+                    <a href="book-category.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'book-category.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Category</span>
                     </a>
@@ -108,7 +116,7 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
 
         <li class="nav-item">
             <a class="nav-link <?php echo ($current_page == 'purchased-books.php') ? 'active' : ''; ?>"
-                href="purchased-books.php?user_id=<?php echo $user_id; ?>">
+                href="purchased-books.php?user_id=<?php echo base64_encode($decoded_user_id); ?>">
                 <i class="bx bx-book"></i>
                 <span>Purchase Book</span>
             </a>
@@ -126,13 +134,13 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                 class="nav-content collapse <?php echo in_array($current_page, ['sold-books-report.php', 'student-logs-report.php']) ? 'show' : ''; ?>"
                 data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="sold-books-report.php?user_id=<?php echo $user_id; ?>"
+                    <a href="sold-books-report.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'sold-books-report.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Sold Books</span>
                     </a>
                 </li>
                 <li>
-                    <a href="student-logs-report.php?user_id=<?php echo $user_id; ?>"
+                    <a href="student-logs-report.php?user_id=<?php echo base64_encode($decoded_user_id); ?>"
                         class="<?php echo ($current_page == 'student-logs-report.php') ? 'active' : ''; ?>">
                         <i class="bi bi-circle"></i><span>Student Logs</span>
                     </a>
@@ -141,14 +149,14 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
         </li>
         <li class="nav-item">
             <a class="nav-link <?php echo ($current_page == 'students.php') ? 'active' : ''; ?>"
-                href="students.php?user_id=<?php echo $user_id; ?>">
+                href="students.php?user_id=<?php echo base64_encode($decoded_user_id); ?>">
                 <i class="bx bx-group"></i>
                 <span>Students</span>
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link <?php echo ($current_page == 'users.php') ? 'active' : ''; ?>"
-                href="users.php?user_id=<?php echo $user_id; ?>">
+                href="users.php?user_id=<?php echo base64_encode($decoded_user_id); ?>">
                 <i class="bx bx-user-circle"></i>
                 <span>Users</span>
             </a>
