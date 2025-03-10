@@ -155,6 +155,13 @@ if (isset($_GET['user_id'])) {
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link <?php echo ($current_page == 'school-year.php') ? 'active' : ''; ?>"
+                href="school-year.php?user_id=<?php echo base64_encode($decoded_user_id); ?>">
+                <i class="bx bx-group"></i>
+                <span>School Year</span>
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link <?php echo ($current_page == 'users.php') ? 'active' : ''; ?>"
                 href="users.php?user_id=<?php echo base64_encode($decoded_user_id); ?>">
                 <i class="bx bx-user-circle"></i>

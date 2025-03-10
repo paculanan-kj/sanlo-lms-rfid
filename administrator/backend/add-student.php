@@ -5,6 +5,7 @@ $response = array('success' => false, 'message' => '');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = intval($_POST['user_id']);
+    $sy_id = intval($_POST['sy_id']);  // Capture sy_id
     $rfid = trim($_POST['rfid']);
     $firstname = trim($_POST['firstname']);
     $middlename = trim($_POST['middlename']) ?: '';
@@ -12,12 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $gradelevel = trim($_POST['gradelevel']);
     $address = trim($_POST['address']);
 
-    if (empty($rfid) || empty($firstname) || empty($lastname) || empty($gradelevel) || empty($address)) {
+    if (empty($rfid) || empty($firstname) || empty($lastname) || empty($gradelevel) || empty($address) || empty($sy_id)) {
         $response['message'] = 'Required fields are missing.';
         echo json_encode($response);
         exit;
     }
 
+    // Check if RFID already exists
     $checkSql = "SELECT COUNT(*) FROM student WHERE rfid = ?";
     $checkStmt = $con->prepare($checkSql);
     $checkStmt->bind_param('s', $rfid);
@@ -32,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // Handle Picture Upload
     $picturePath = null;
     if (isset($_FILES['picture']) && $_FILES['picture']['error'] == UPLOAD_ERR_OK) {
         $uploadDir = '../uploads/';
@@ -51,10 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    $sql = "INSERT INTO student (user_id, rfid, firstname, middlename, lastname, gradelevel, address, picture, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    // Insert Student Data into Database (Including sy_id)
+    $sql = "INSERT INTO student (user_id, sy_id, rfid, firstname, middlename, lastname, gradelevel, address, picture, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
     $stmt = $con->prepare($sql);
-    $stmt->bind_param('isssssss', $user_id, $rfid, $firstname, $middlename, $lastname, $gradelevel, $address, $picturePath);
+    $stmt->bind_param('iisssssss', $user_id, $sy_id, $rfid, $firstname, $middlename, $lastname, $gradelevel, $address, $picturePath);
 
     if ($stmt->execute()) {
         $response['success'] = true;

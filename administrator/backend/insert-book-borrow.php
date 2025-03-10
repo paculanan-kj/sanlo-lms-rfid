@@ -39,7 +39,7 @@ if ($total_copies_result->num_rows > 0) {
 
     // Step 4: Check if the quantity requested exceeds available copies
     if ($quantity > $available_copies) {
-        echo json_encode(['success' => false, 'message' => 'Cannot borrow. Only ' . $available_copies . ' copies are available.']);
+        echo json_encode(['success' => false, 'message' => 'Cannot borrow. This book has ' . $available_copies . ' stock.']);
         exit; // Stop execution if the request exceeds available copies
     }
 
@@ -62,4 +62,3 @@ if ($total_copies_result->num_rows > 0) {
 $total_copies_stmt->close();
 $borrowed_stmt->close();
 $con->close();
-?>

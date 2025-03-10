@@ -48,10 +48,19 @@ session_start();
 
         <div class="pagetitle">
             <h1>Students</h1>
+            <?php
+            include('backend/dbcon.php');
+
+            // Fetch the active school year
+            $query = "SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1";
+            $result = $con->query($query);
+            $active_school_year = ($result->num_rows > 0) ? $result->fetch_assoc()['school_year'] : 'No Active School Year';
+            ?>
+
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
-                    <li class="breadcrumb-item active">Manage Students</li>
+                    <li class="breadcrumb-item active">School Year: <?= htmlspecialchars($active_school_year); ?></li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -89,48 +98,61 @@ session_start();
                                     <?php
                                     include 'backend/dbcon.php';
 
-                                    // Execute the SQL query to fetch data from the 'students' table, including RFID
-                                    $query = "SELECT student_id, firstname, middlename, lastname, gradelevel, address, picture, rfid FROM student"; // Adjust your query to include rfid
-                                    $result = $con->query($query); // Execute the query
+                                    // Check if there's an active school year
+                                    $activeSYQuery = "SELECT sy_id FROM school_year WHERE status = 'active' LIMIT 1";
+                                    $activeSYResult = $con->query($activeSYQuery);
 
-                                    if ($result && $result->num_rows > 0) { // Check if the query was successful and has results
-                                        while ($row = $result->fetch_assoc()) {
-                                            // Combine first name, middle name (if exists), and last name for full name
-                                            $fullName = trim($row['firstname'] . ' ' . $row['middlename'] . ' ' . $row['lastname']);
-                                            // Construct the image path
-                                            $picturePath = 'uploads/' . $row['picture']; // Adjust this path based on your folder structure
+                                    if ($activeSYResult->num_rows > 0) {
+                                        // If there's an active school year, fetch students
+                                        $query = "SELECT student_id, firstname, middlename, lastname, gradelevel, 
+                         address, picture, rfid 
+                  FROM student";
 
-                                            echo '<tr>';
-                                            echo '<td>' . htmlspecialchars($fullName) . '</td>'; // Output full name safely
-                                            echo '<td>' . htmlspecialchars($row['gradelevel']) . '</td>'; // Output grade level safely
-                                            echo '<td>' . htmlspecialchars($row['address']) . '</td>'; // Output address safely
-                                            echo '<td>' . htmlspecialchars($row['rfid']) . '</td>'; // Output RFID safely
-                                            echo '<td>
-                                                    <img src="' . htmlspecialchars($picturePath) . '" alt="Student Picture" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-                                                </td>';
-                                            echo '<td>
-                                                    <button type="button" class="btn btn-primary btn-sm edit-button" 
-                                                            data-id="' . $row['student_id'] . '" 
-                                                            data-firstname="' . htmlspecialchars($row['firstname']) . '" 
-                                                            data-middlename="' . htmlspecialchars($row['middlename']) . '" 
-                                                            data-lastname="' . htmlspecialchars($row['lastname']) . '">
-                                                        Edit
-                                                    </button>
-                                                    <button type="button" class="btn btn-danger btn-sm delete-button" 
-                                                            data-id="' . $row['student_id'] . '">
-                                                        Delete
-                                                    </button>
-                                                </td>';
-                                            echo '</tr>';
+                                        $result = $con->query($query); // Execute the query
+
+                                        if ($result && $result->num_rows > 0) {
+                                            while ($row = $result->fetch_assoc()) {
+                                                // Combine first name, middle name (if exists), and last name for full name
+                                                $fullName = trim($row['firstname'] . ' ' . $row['middlename'] . ' ' . $row['lastname']);
+                                                // Construct the image path
+                                                $picturePath = 'uploads/' . $row['picture']; // Adjust this path based on your folder structure
+
+                                                echo '<tr>';
+                                                echo '<td>' . htmlspecialchars($fullName) . '</td>'; // Output full name safely
+                                                echo '<td>' . htmlspecialchars($row['gradelevel']) . '</td>'; // Output grade level safely
+                                                echo '<td>' . htmlspecialchars($row['address']) . '</td>'; // Output address safely
+                                                echo '<td>' . htmlspecialchars($row['rfid']) . '</td>'; // Output RFID safely
+                                                echo '<td>
+                                                        <img src="' . htmlspecialchars($picturePath) . '" alt="Student Picture" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                                                    </td>';
+                                                echo '<td>
+                                                        <button type="button" class="btn btn-primary btn-sm edit-button" 
+                                                                data-id="' . $row['student_id'] . '" 
+                                                                data-firstname="' . htmlspecialchars($row['firstname']) . '" 
+                                                                data-middlename="' . htmlspecialchars($row['middlename']) . '" 
+                                                                data-lastname="' . htmlspecialchars($row['lastname']) . '">
+                                                            Edit
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger btn-sm delete-button" 
+                                                                data-id="' . $row['student_id'] . '">
+                                                            Delete
+                                                        </button>
+                                                    </td>';
+                                                echo '</tr>';
+                                            }
+                                        } else {
+                                            // If no students are found
+                                            echo '<tr><td colspan="6" class="text-center">No students found</td></tr>';
                                         }
                                     } else {
-                                        // If no results are found or the query failed
-                                        echo '<tr><td colspan="6" class="text-center">No entries found</td></tr>'; // Adjust colspan to 6 for the new RFID column
+                                        // If no active school year is found
+                                        echo '<tr><td colspan="6" class="text-center text-danger"><strong>No active school year.</strong></td></tr>';
                                     }
 
                                     $con->close(); // Close the database connection
                                     ?>
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
@@ -139,18 +161,32 @@ session_start();
             </div>
         </section>
 
+        <!-- Fetch Active School Year -->
+        <?php
+        include 'backend/dbcon.php'; // Adjust your database connection file
+        $query = "SELECT sy_id, school_year FROM school_year WHERE status = 'active' LIMIT 1";
+        $result = mysqli_query($con, $query);
+        $activeSY = mysqli_fetch_assoc($result);
+        ?>
+
         <!-- Add Modal -->
         <form id="addStudentForm" enctype="multipart/form-data" method="POST">
             <div class="modal fade" id="addStudent" tabindex="-1">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Add User</h5>
+                            <h5 class="modal-title">Add Student</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <input type="hidden" id="user_id" name="user_id" value="<?php echo $_SESSION['user_id']; ?>" />
 
+                            <!-- Display Active School Year -->
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <input type="hidden" id="sy_id" name="sy_id" value="<?php echo $activeSY['sy_id']; ?>">
+                                </div>
+                            </div>
                             <div class="row mb-3">
                                 <div class="col-8 mb-1">
                                     <label for="rfid" class="form-label">RFID Tag</label>

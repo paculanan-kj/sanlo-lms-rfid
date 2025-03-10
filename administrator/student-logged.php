@@ -1,32 +1,5 @@
 <?php
 session_start();
-
-// Set timeout to 1 minute (60 seconds)
-$timeout_duration = 60;
-
-// Check if user is logged in
-if (isset($_SESSION['username']) && isset($_SESSION['user_id'])) {
-  // Check if session has expired
-  if (isset($_SESSION['last_activity'])) {
-    $session_lifetime = time() - $_SESSION['last_activity'];
-
-    if ($session_lifetime > $timeout_duration) {
-      // Destroy session if timed out
-      session_unset();
-      session_destroy();
-    }
-  }
-
-  // Update last activity time
-  $_SESSION['last_activity'] = time();
-}
-
-// Handle AJAX timeout check
-if (isset($_GET['check_timeout'])) {
-  header('Content-Type: application/json');
-  echo json_encode(['timeout' => $session_lifetime > $timeout_duration]);
-  exit();
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -166,14 +139,25 @@ if (isset($_GET['check_timeout'])) {
     <div class="pagetitle d-flex align-items-center justify-content-between">
       <div>
         <h1>Student Logged In</h1>
+        <?php
+        include('backend/dbcon.php');
+
+        // Fetch the active school year
+        $query = "SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1";
+        $result = $con->query($query);
+        $active_school_year = ($result->num_rows > 0) ? $result->fetch_assoc()['school_year'] : 'No Active School Year';
+        ?>
         <nav>
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
-            <li class="breadcrumb-item active">Student Logged In</li>
+            <li class="breadcrumb-item active">School Year: <?= htmlspecialchars($active_school_year); ?></li>
           </ol>
         </nav>
       </div>
-      <button onclick="location.href='student-scan.php?user_id=<?php echo $user_id; ?>';" class="btn btn-success">Student In/Out</button>
+      <?php
+      $encoded_user_id = base64_encode($user_id);
+      ?>
+      <button onclick="location.href='student-scan.php?user_id=<?php echo $encoded_user_id; ?>';" class="btn btn-success">Student In/Out</button>
     </div>
 
     <?php

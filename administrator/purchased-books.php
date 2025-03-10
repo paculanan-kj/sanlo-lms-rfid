@@ -551,14 +551,19 @@ session_start();
         document.addEventListener('DOMContentLoaded', function() {
             // Get user_id from URL
             const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('user_id');
+            const encodedUserId = urlParams.get('user_id');
 
-            // Set user_id in the hidden input field if it exists
-            if (userId) {
-                document.getElementById('userId').value = userId;
+            // Decode Base64 user_id and set it in the hidden input field
+            if (encodedUserId) {
+                try {
+                    const decodedUserId = atob(decodeURIComponent(encodedUserId));
+                    document.getElementById('userId').value = decodedUserId;
+                } catch (error) {
+                    console.error("Error decoding user_id:", error);
+                }
             }
 
-            // Existing variables
+            // DOM Elements
             const borrowBookInput = document.getElementById("BorrowBook");
             const bookIdInput = document.getElementById("bookId");
             const bookSuggestions = document.getElementById("bookSuggestions");
@@ -605,7 +610,7 @@ session_start();
                 }
             });
 
-            // Update the change amount
+            // Function to update change amount
             function updateChange() {
                 const totalAmount = parseFloat(totalAmountSpan.textContent) || 0;
                 const studentMoney = parseFloat(studentMoneyInput.value) || 0;
@@ -630,15 +635,15 @@ session_start();
 
                 const newRow = document.createElement("tr");
                 newRow.innerHTML = `
-            <td>${borrowBookInput.value}</td>
-            <td>${quantity}</td>
-            <td>₱${totalForBook.toFixed(2)}</td>
-            <td>
-                <button type="button" class="btn btn-danger btn-sm remove-book">
-                    <i class="bx bx-trash"></i>
-                </button>
-            </td>
-        `;
+                <td>${borrowBookInput.value}</td>
+                <td>${quantity}</td>
+                <td>₱${totalForBook.toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm remove-book">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </td>
+            `;
                 bookListTable.appendChild(newRow);
 
                 bookDetailsSection.style.display = 'block';
@@ -683,9 +688,19 @@ session_start();
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
 
+                const bookRows = [];
+                document.querySelectorAll('#bookList tr').forEach(row => {
+                    bookRows.push({
+                        title: row.cells[0].textContent,
+                        quantity: parseInt(row.cells[1].textContent),
+                        amount: parseFloat(row.cells[2].textContent.replace('₱', ''))
+                    });
+                });
+
                 const formData = new FormData(form);
+                formData.append('bookRows', JSON.stringify(bookRows));
                 formData.append('total_amount', totalAmountSpan.textContent);
-                formData.append('change', changeAmountInput.value);
+                formData.append('change', changeAmountInput.value.replace('₱', ''));
 
                 fetch('backend/insert-purchase-book.php', {
                         method: 'POST',
@@ -696,7 +711,7 @@ session_start();
                         if (data.status === "error") {
                             Swal.fire({
                                 icon: "error",
-                                title: "Stock Alert",
+                                title: "Purchase Error",
                                 text: data.message
                             });
                         } else if (data.status === "success") {
@@ -704,88 +719,24 @@ session_start();
                                 icon: "success",
                                 title: "Success",
                                 text: data.message
+                            }).then(() => {
+                                form.reset();
+                                bookListTable.innerHTML = '';
+                                totalAmountSpan.textContent = '₱0.00';
+                                bookDetailsSection.style.display = 'none';
+                                location.reload();
                             });
-                            form.reset();
-                            bookListTable.innerHTML = '';
-                            totalAmountSpan.textContent = '0';
-                            bookDetailsSection.style.display = 'none';
                         }
                     })
-                    .catch(error => console.error("Error submitting form:", error));
-            });
-        });
-    </script>
-
-    <script>
-        // Form Submission Handling
-        const form = document.getElementById('addBookBorrowForm');
-        const totalAmountSpan = document.getElementById('totalAmount');
-        const changeAmountInput = document.getElementById('changeAmount');
-        const bookListTable = document.getElementById('bookList');
-        const bookDetailsSection = document.getElementById('bookDetailsSection');
-
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            // Collect all book rows data
-            const bookRows = [];
-            document.querySelectorAll('#bookList tr').forEach(row => {
-                bookRows.push({
-                    title: row.cells[0].textContent,
-                    quantity: parseInt(row.cells[1].textContent),
-                    amount: parseFloat(row.cells[2].textContent.replace('₱', ''))
-                });
-            });
-
-            // Log data for debugging
-            console.log('Book Rows:', bookRows);
-            console.log('Total Amount:', totalAmountSpan.textContent);
-            console.log('Change:', changeAmountInput.value);
-
-            const formData = new FormData(form);
-            formData.append('bookRows', JSON.stringify(bookRows));
-            formData.append('total_amount', totalAmountSpan.textContent);
-            formData.append('change', changeAmountInput.value.replace('₱', ''));
-
-            // Send data to PHP script
-            fetch('backend/insert-purchase-book.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Response Data:', data); // Log response for debugging
-                    if (data.status === "error") {
+                    .catch(error => {
+                        console.error("Error submitting form:", error);
                         Swal.fire({
                             icon: "error",
-                            title: "Purchase Error",
-                            text: data.message
+                            title: "System Error",
+                            text: "An unexpected error occurred. Please try again."
                         });
-                    } else if (data.status === "success") {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Success",
-                            text: data.message
-                        }).then(() => {
-                            // Clear the form and reset the table
-                            form.reset();
-                            bookListTable.innerHTML = '';
-                            totalAmountSpan.textContent = '₱0.00';
-                            bookDetailsSection.style.display = 'none';
-
-                            // Reload the page
-                            location.reload();
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error("Error submitting form:", error);
-                    Swal.fire({
-                        icon: "error",
-                        title: "System Error",
-                        text: "An unexpected error occurred. Please try again."
                     });
-                });
+            });
         });
     </script>
 

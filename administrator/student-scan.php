@@ -248,9 +248,13 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
 <body class="body-scan">
 
     <div class="button-container">
-        <button class="btn btn-danger" onclick="window.location.href='student-logged.php?user_id=<?php echo $user_id; ?>'">
+        <?php
+        $encoded_user_id = base64_encode($user_id);
+        ?>
+        <button class="btn btn-danger" onclick="window.location.href='student-logged.php?user_id=<?php echo $encoded_user_id; ?>'">
             <i class="bx bx-arrow-back"></i>
         </button>
+
     </div>
     <!-- Attendance System UI -->
     <div class="container main text-center">
@@ -279,12 +283,12 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                             <div class="student-info-container">
                                 <!-- Student Photo -->
                                 <div class="student-photo-container">
-                                    <img id="studentPhoto" class="student-photo" src="uploads/default.png" alt="Student Photo" />
+                                    <img id="studentPhoto" class="student-photo" src="assets/logo/ndk-logo.png" alt="Student Photo" />
                                 </div>
 
                                 <!-- Student Details -->
                                 <div class="student-details">
-                                    <h3 id="studentName">John Smith</h3>
+                                    <h3 id="studentName">Name</h3>
                                     <p><strong>Grade Level:</strong> <span id="studentGradeLevel"></span></p>
                                 </div>
                             </div>
