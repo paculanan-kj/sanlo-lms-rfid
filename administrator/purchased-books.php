@@ -1,6 +1,5 @@
 <?php
-session_start();
-
+require_once 'auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -167,7 +166,6 @@ session_start();
                                         echo "<td>" . htmlspecialchars($row['title']) . "</td>"; // Title
                                         echo "<td>";
                                         echo "<div class='d-flex align-items-center'>";
-                                        echo "<img src='" . htmlspecialchars($picturePath) . "' alt='Student Image' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
                                         echo "<span>" . htmlspecialchars($row['student_name']) . "</span>";
                                         echo "</div>";
                                         echo "</td>";
@@ -688,6 +686,19 @@ session_start();
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
 
+                const totalAmount = parseFloat(totalAmountSpan.textContent) || 0;
+                const studentMoney = parseFloat(studentMoneyInput.value) || 0;
+
+                if (studentMoney < totalAmount) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Insufficient Funds",
+                        text: "The student's money is not enough to purchase the selected books."
+                    });
+                    return;
+                }
+
+                // Continue with form submission if funds are sufficient
                 const bookRows = [];
                 document.querySelectorAll('#bookList tr').forEach(row => {
                     bookRows.push({
@@ -720,12 +731,17 @@ session_start();
                                 title: "Success",
                                 text: data.message
                             }).then(() => {
+                                // Open receipt in a new tab
+                                window.open(`backend/receipt.php?purchase_id=${data.purchase_id}`, '_blank');
+
+                                // Reset form and refresh UI
                                 form.reset();
                                 bookListTable.innerHTML = '';
                                 totalAmountSpan.textContent = '₱0.00';
                                 bookDetailsSection.style.display = 'none';
                                 location.reload();
                             });
+
                         }
                     })
                     .catch(error => {

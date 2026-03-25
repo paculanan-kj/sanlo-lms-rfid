@@ -1,0 +1,342 @@
+.container {
+  position: relative;
+  width: 80%;
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* prevents blur overflow */
+}
+
+/* Background layer */
+.container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../logo/ndk-logo.png") no-repeat center center;
+  background-size: 80%;
+  filter: blur(4px); /* 👈 slight blur */
+  opacity: 0.6; /* optional for softer look */
+  z-index: 0;
+}
+
+/* Keep content above blurred background */
+.container > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Content stays above overlay */
+.container .content-box {
+  position: relative;
+  z-index: 1;
+
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 10px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Header and Navigation Styles */
+.topbar {
+  background-color: rgb(10, 43, 194);
+  padding: 0.5rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.logo {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+
+.logo img {
+  height: 60px;
+  margin-right: 10px;
+}
+
+.nav-tabs {
+  border: none;
+  margin-top: 0.5rem;
+}
+
+.nav-tabs .nav-link {
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 0;
+  padding: 0.8rem 1.5rem;
+  font-weight: 600;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.nav-tabs .nav-link:hover {
+  color: white;
+}
+
+.nav-tabs .nav-link.active {
+  color: white;
+  background-color: transparent;
+  border-bottom: 3px solid #2eca6a;
+}
+
+.nav-tabs .nav-link i {
+  margin-right: 8px;
+}
+
+/* Container Styles */
+.main {
+  max-width: 1200px;
+  padding: 2rem;
+  margin-top: 1rem;
+}
+
+/* RFID Scan Card Styles */
+.feature-card {
+  background-color: transparent;
+  color: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.card-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #fff;
+}
+
+/* Scanner Icon Animation */
+.scanner-icon-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-rings {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.scan-icon {
+  font-size: 80px;
+  color: rgb(184, 33, 33);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.scan-icon:hover {
+  transform: scale(1.1);
+}
+
+#rfidInput {
+  opacity: 0;
+  position: absolute;
+  left: -9999px;
+}
+
+/* Student Card */
+.info-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Student Info Layout */
+.student-info-container {
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Student Photo */
+.student-photo-container {
+  flex-shrink: 0;
+}
+
+.student-photo {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  margin-bottom: 20px; /* space between photo and name */
+}
+
+.student-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Student Details */
+.student-details {
+  text-align: left;
+  margin-left: 40px;
+}
+
+.student-details h3 {
+  margin: 0;
+  font-size: 2.2rem;
+  color: #042a4a;
+}
+
+.student-details p {
+  margin: 5px 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+/* Time Info Section */
+.time-info-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  gap: 15px;
+}
+
+.time-box {
+  text-align: center;
+  flex: 1;
+}
+
+.time-box:not(:last-child) {
+  border-right: 1px solid #ddd;
+}
+
+.time-box i {
+  font-size: 1.2rem;
+  color: #042a4a;
+}
+
+.time-label {
+  font-size: 1.1rem;
+  color: #6c757d;
+}
+
+.time-value {
+  font-size: 1.1rem;
+  color: #042a4a;
+  font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main {
+    padding: 1rem;
+  }
+
+  .student-info-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .student-details {
+    margin-left: 0;
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  .time-info-container {
+    flex-direction: column;
+  }
+
+  .time-box:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .nav-tabs .nav-link {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .logo {
+    font-size: 1.2rem;
+  }
+
+  .logo img {
+    height: 30px;
+  }
+}
+
+.green {
+  color: green !important;
+}
+
+.scanning {
+  color: green !important;
+  animation: pulse 0.5s infinite;
+}
+
+/* Back Button */
+.back-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1001;
+}
+
+/* Current Date and Time Display */
+.date-time-display {
+  color: white;
+  text-align: right;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.date-time-display span {
+  font-weight: 600;
+}

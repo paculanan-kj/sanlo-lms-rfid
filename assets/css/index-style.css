@@ -1,0 +1,40 @@
+/* Full-page login section with logo as background */
+.login-main {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Background logo */
+  background: url("../logo/ndk-logo.png") no-repeat center center;
+  background-size: 60%; /* make it smaller */
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Login card styling */
+.login-card {
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+/* Show/hide password icon */
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 38px;
+  cursor: pointer;
+  font-size: 20px;
+  color: #007bff;
+}
+
+.scanner-icon-container {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+  margin-top: 20px;
+}

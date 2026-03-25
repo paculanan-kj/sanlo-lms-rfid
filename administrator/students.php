@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,19 +48,10 @@ session_start();
 
         <div class="pagetitle">
             <h1>Students</h1>
-            <?php
-            include('backend/dbcon.php');
-
-            // Fetch the active school year
-            $query = "SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1";
-            $result = $con->query($query);
-            $active_school_year = ($result->num_rows > 0) ? $result->fetch_assoc()['school_year'] : 'No Active School Year';
-            ?>
-
             <nav>
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
-                    <li class="breadcrumb-item active">School Year: <?= htmlspecialchars($active_school_year); ?></li>
+                    <li class="breadcrumb-item active">All Students</li>
                 </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -70,106 +61,127 @@ session_start();
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="card-title">Students</h5>
-                                <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#addStudent">
-                                    <i class="bx bx-plus me-1"></i> New Student
-                                </button>
+                                <div>
+                                    <button type="button" class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#uploadCSV">
+                                        <i class="bx bx-upload me-1"></i> Upload CSV File
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addStudent">
+                                        <i class="bx bx-plus me-1"></i> New Student
+                                    </button>
+                                </div>
                             </div>
+
                             <?php
                             include 'backend/dbcon.php';
-                            // Fetch user data
-                            $sql = "SELECT user_id, firstname, middlename, lastname, username, email FROM user";
-                            $result = $con->query($sql);
+
+                            // Fetch all students including their profile picture
+                            $query = "SELECT student_id, firstname, middlename, lastname, rfid, picture
+                                FROM student 
+                                ORDER BY lastname, firstname";
+                            $result = $con->query($query);
                             ?>
 
                             <table class="table datatable">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Grade Level</th>
-                                        <th>Address</th>
-                                        <th>RFID</th> <!-- New column for RFID -->
-                                        <th>Image</th>
+                                        <th>RFID</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                    include 'backend/dbcon.php';
+                                    if ($result && $result->num_rows > 0) {
+                                        while ($row = $result->fetch_assoc()) {
+                                            $fullName = trim($row['firstname'] . ' ' . $row['middlename'] . ' ' . $row['lastname']);
 
-                                    // Check if there's an active school year
-                                    $activeSYQuery = "SELECT sy_id FROM school_year WHERE status = 'active' LIMIT 1";
-                                    $activeSYResult = $con->query($activeSYQuery);
+                                            // Profile picture handling
+                                            $defaultPhoto = 'assets/logo/ndk-logo.png'; // default profile picture
+                                            $photoPath = !empty($row['picture']) && file_exists('../students/profile/' . $row['picture'])
+                                                ? '../students/profile/' . $row['picture']
+                                                : $defaultPhoto;
 
-                                    if ($activeSYResult->num_rows > 0) {
-                                        // If there's an active school year, fetch students
-                                        $query = "SELECT student_id, firstname, middlename, lastname, gradelevel, 
-                         address, picture, rfid 
-                  FROM student";
-
-                                        $result = $con->query($query); // Execute the query
-
-                                        if ($result && $result->num_rows > 0) {
-                                            while ($row = $result->fetch_assoc()) {
-                                                // Combine first name, middle name (if exists), and last name for full name
-                                                $fullName = trim($row['firstname'] . ' ' . $row['middlename'] . ' ' . $row['lastname']);
-                                                // Construct the image path
-                                                $picturePath = 'uploads/' . $row['picture']; // Adjust this path based on your folder structure
-
-                                                echo '<tr>';
-                                                echo '<td>' . htmlspecialchars($fullName) . '</td>'; // Output full name safely
-                                                echo '<td>' . htmlspecialchars($row['gradelevel']) . '</td>'; // Output grade level safely
-                                                echo '<td>' . htmlspecialchars($row['address']) . '</td>'; // Output address safely
-                                                echo '<td>' . htmlspecialchars($row['rfid']) . '</td>'; // Output RFID safely
-                                                echo '<td>
-                                                        <img src="' . htmlspecialchars($picturePath) . '" alt="Student Picture" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-                                                    </td>';
-                                                echo '<td>
-                                                        <button type="button" class="btn btn-primary btn-sm edit-button" 
-                                                                data-id="' . $row['student_id'] . '" 
-                                                                data-firstname="' . htmlspecialchars($row['firstname']) . '" 
-                                                                data-middlename="' . htmlspecialchars($row['middlename']) . '" 
-                                                                data-lastname="' . htmlspecialchars($row['lastname']) . '">
-                                                            Edit
-                                                        </button>
-                                                        <button type="button" class="btn btn-danger btn-sm delete-button" 
-                                                                data-id="' . $row['student_id'] . '">
-                                                            Delete
-                                                        </button>
-                                                    </td>';
-                                                echo '</tr>';
-                                            }
-                                        } else {
-                                            // If no students are found
-                                            echo '<tr><td colspan="6" class="text-center">No students found</td></tr>';
+                                            echo '<tr>';
+                                            echo '<td>
+                                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                                        <img src="' . $photoPath . '" alt="Profile Picture" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                                                        <span>' . htmlspecialchars($fullName) . '</span>
+                                                    </div>
+                                                </td>';
+                                            echo '<td>' . htmlspecialchars($row['rfid']) . '</td>';
+                                            echo '<td>
+                                                    <button type="button" class="btn btn-primary btn-sm edit-button" 
+                                                            data-id="' . $row['student_id'] . '" 
+                                                            data-firstname="' . htmlspecialchars($row['firstname']) . '" 
+                                                            data-middlename="' . htmlspecialchars($row['middlename']) . '" 
+                                                            data-lastname="' . htmlspecialchars($row['lastname']) . '">
+                                                        Edit
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger btn-sm delete-button" 
+                                                            data-id="' . $row['student_id'] . '">
+                                                        Delete
+                                                    </button>
+                                                </td>';
+                                            echo '</tr>';
                                         }
                                     } else {
-                                        // If no active school year is found
-                                        echo '<tr><td colspan="6" class="text-center text-danger"><strong>No active school year.</strong></td></tr>';
+                                        echo '<tr><td colspan="3" class="text-center">No students found.</td></tr>';
                                     }
 
-                                    $con->close(); // Close the database connection
+                                    $con->close();
                                     ?>
                                 </tbody>
-
                             </table>
                         </div>
                     </div>
-
                 </div>
             </div>
         </section>
 
-        <!-- Fetch Active School Year -->
+
         <?php
-        include 'backend/dbcon.php'; // Adjust your database connection file
-        $query = "SELECT sy_id, school_year FROM school_year WHERE status = 'active' LIMIT 1";
-        $result = mysqli_query($con, $query);
-        $activeSY = mysqli_fetch_assoc($result);
+        include('backend/dbcon.php');
+
+        // Fetch the first available user ID (or from session)
+        $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'No User Found';
         ?>
 
-        <!-- Add Modal -->
+        <!-- Upload CSV Modal -->
+        <div class="modal fade" id="uploadCSV" tabindex="-1" aria-labelledby="uploadCSVLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="uploadCSVLabel">Upload CSV File</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Hidden User ID -->
+                        <input type="hidden" class="form-control" value="<?= $user_id ?>" readonly>
+
+                        <!-- File Upload Field -->
+                        <div class="mb-3">
+                            <label for="csvFile" class="form-label">Select CSV File</label>
+                            <input type="file" class="form-control" id="csvFile" accept=".csv" required>
+                        </div>
+
+                        <!-- Download Format Button -->
+                        <div class="mb-3 text-center">
+                            <a href="backend/download_format.php" class="btn btn-info btn-sm">
+                                <i class="bx bx-download me-1"></i> Download CSV Format
+                            </a>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="uploadCsvBtn">Upload</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Student Modal -->
         <form id="addStudentForm" enctype="multipart/form-data" method="POST">
             <div class="modal fade" id="addStudent" tabindex="-1">
                 <div class="modal-dialog modal-lg">
@@ -179,21 +191,19 @@ session_start();
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <input type="hidden" id="user_id" name="user_id" value="<?php echo $_SESSION['user_id']; ?>" />
+                            <!-- Hidden User ID -->
+                            <input type="hidden" id="user_id" name="user_id" value="<?= $user_id ?>">
 
-                            <!-- Display Active School Year -->
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <input type="hidden" id="sy_id" name="sy_id" value="<?php echo $activeSY['sy_id']; ?>">
-                                </div>
-                            </div>
+                            <!-- RFID Tag -->
                             <div class="row mb-3">
                                 <div class="col-8 mb-1">
                                     <label for="rfid" class="form-label">RFID Tag</label>
                                     <input type="text" class="form-control" id="rfid" name="rfid" placeholder="Scan RFID ..." required>
                                 </div>
                             </div>
-                            <div class="row">
+
+                            <!-- Name Fields -->
+                            <div class="row mb-3">
                                 <div class="col-4 mb-1">
                                     <label for="firstname" class="form-label">Firstname</label>
                                     <input type="text" class="form-control" id="firstname" name="firstname" required>
@@ -207,16 +217,8 @@ session_start();
                                     <input type="text" class="form-control" id="lastname" name="lastname" required>
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-4">
-                                    <label for="gradelevel" class="form-label">Grade Level</label>
-                                    <input type="text" class="form-control" id="gradelevel" name="gradelevel" required>
-                                </div>
-                                <div class="col-4">
-                                    <label for="address" class="form-label">Address</label>
-                                    <input type="text" class="form-control" id="address" name="address" required>
-                                </div>
-                            </div>
+
+                            <!-- Upload Picture -->
                             <div class="row mb-3">
                                 <div class="col-4">
                                     <label for="formFile" class="form-label">Upload Picture</label>
@@ -224,14 +226,16 @@ session_start();
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Modal Footer -->
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary">Submit</button>
                         </div>
+
                     </div>
                 </div>
             </div>
-
         </form>
 
         <!-- Update Modal -->
@@ -239,57 +243,58 @@ session_start();
             <div class="modal fade" id="updateStudentModal" tabindex="-1">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
+
                         <div class="modal-header">
                             <h5 class="modal-title">Update Student</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
+
                         <div class="modal-body">
+                            <!-- Hidden Student ID -->
                             <input type="hidden" id="edit_student_id" name="student_id">
-                            <div class="row mb-3">
-                                <div class="col-12 mb-1">
-                                    <label for="edit_rfid" class="form-label">RFID Tag</label>
-                                    <input type="text" class="form-control" id="edit_rfid" name="rfid" required>
-                                </div>
+
+                            <!-- RFID Field -->
+                            <div class="mb-3">
+                                <label for="edit_rfid" class="form-label">RFID Tag</label>
+                                <input type="text" class="form-control" id="edit_rfid" name="rfid" required>
                             </div>
+
+                            <!-- Name Fields -->
                             <div class="row mb-3">
-                                <div class="col-4 mb-1">
-                                    <label for="edit_firstname" class="form-label">Firstname</label>
+                                <div class="col-md-4">
+                                    <label for="edit_firstname" class="form-label">First Name</label>
                                     <input type="text" class="form-control" id="edit_firstname" name="firstname" required>
                                 </div>
-                                <div class="col-4 mb-1">
-                                    <label for="edit_middlename" class="form-label">Middlename</label>
+                                <div class="col-md-4">
+                                    <label for="edit_middlename" class="form-label">Middle Name (Optional)</label>
                                     <input type="text" class="form-control" id="edit_middlename" name="middlename">
                                 </div>
-                                <div class="col-4 mb-1">
-                                    <label for="edit_lastname" class="form-label">Lastname</label>
+                                <div class="col-md-4">
+                                    <label for="edit_lastname" class="form-label">Last Name</label>
                                     <input type="text" class="form-control" id="edit_lastname" name="lastname" required>
                                 </div>
                             </div>
+
+                            <!-- Optional Picture Upload -->
                             <div class="row mb-3">
-                                <div class="col-4 mb-1">
-                                    <label for="edit_gradelevel" class="form-label">Grade Level</label>
-                                    <input type="text" class="form-control" id="edit_gradelevel" name="gradelevel" required>
-                                </div>
-                                <div class="col-4 mb-1">
-                                    <label for="edit_address" class="form-label">Address</label>
-                                    <input type="text" class="form-control" id="edit_address" name="address" required>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-4">
-                                    <label for="edit_picture" class="form-label">Update Picture</label>
-                                    <input class="form-control" type="file" id="edit_picture" name="picture" accept="image/*">
+                                <div class="col-md-4">
+                                    <label for="edit_formFile" class="form-label">Update Picture (Optional)</label>
+                                    <input class="form-control" type="file" id="edit_formFile" name="picture" accept="image/*">
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Modal Footer -->
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
+
                     </div>
                 </div>
             </div>
         </form>
+
 
     </main><!-- End #main -->
 
@@ -359,24 +364,26 @@ session_start();
 
     <script>
         $(document).ready(function() {
-            // Open the update modal and populate fields when Edit is clicked
+            // Open update modal and populate fields
             $('.edit-button').click(function() {
-                var studentId = $(this).data('id'); // Get the student ID from the button's data attribute
-                var firstname = $(this).data('firstname'); // Get first name from button's data attribute
-                var middlename = $(this).data('middlename'); // Get middle name from button's data attribute
-                var lastname = $(this).data('lastname'); // Get last name from button's data attribute
-                var gradeLevel = $(this).closest('tr').find('td:nth-child(2)').text(); // Get the grade level
-                var address = $(this).closest('tr').find('td:nth-child(3)').text(); // Get the address
-                var rfid = $(this).closest('tr').find('td:nth-child(4)').text(); // Updated index for RFID (4th column)
+                var studentId = $(this).data('id');
+                var firstname = $(this).data('firstname');
+                var middlename = $(this).data('middlename');
+                var lastname = $(this).data('lastname');
+                var rfid = $(this).closest('tr').find('td:nth-child(1)').text().trim(); // RFID is in the first column
+                var gradeLevel = $(this).closest('tr').find('td:nth-child(4)').text().trim();
+                var strand = $(this).closest('tr').find('td:nth-child(5)').text().trim();
+                var section = $(this).closest('tr').find('td:nth-child(6)').text().trim();
 
                 // Populate the modal fields
                 $('#edit_student_id').val(studentId);
-                $('#edit_firstname').val(firstname); // First name
-                $('#edit_middlename').val(middlename); // Middle name
-                $('#edit_lastname').val(lastname); // Last name
+                $('#edit_rfid').val(rfid);
+                $('#edit_firstname').val(firstname);
+                $('#edit_middlename').val(middlename);
+                $('#edit_lastname').val(lastname);
                 $('#edit_gradelevel').val(gradeLevel);
-                $('#edit_address').val(address);
-                $('#edit_rfid').val(rfid); // Populate RFID field
+                $('#edit_strand').val(strand);
+                $('#edit_section').val(section);
 
                 // Show the modal
                 $('#updateStudentModal').modal('show');
@@ -386,11 +393,11 @@ session_start();
             $('#updateStudentForm').submit(function(event) {
                 event.preventDefault(); // Prevent traditional form submission
 
-                var formData = new FormData(this); // Gather form data
+                var formData = new FormData(this);
 
                 $.ajax({
                     type: 'POST',
-                    url: 'backend/update-student.php', // PHP handler for updating student
+                    url: 'backend/update-student.php', // Update this to your backend file
                     data: formData,
                     contentType: false,
                     processData: false,
@@ -398,14 +405,14 @@ session_start();
                         console.log(response); // Debugging
                         if (response.success) {
                             Swal.fire('Success', response.message, 'success').then(() => {
-                                location.reload(); // Reload the page on success
+                                location.reload(); // Reload page on success
                             });
                         } else {
                             Swal.fire('Error', response.message, 'error');
                         }
                     },
                     error: function(xhr) {
-                        console.error(xhr.responseText); // Log any error response
+                        console.error(xhr.responseText);
                         Swal.fire('Error', 'An error occurred. Please try again.', 'error');
                     }
                 });
@@ -464,6 +471,52 @@ session_start();
             });
         });
     </script>
+
+    <script>
+        document.getElementById('uploadCsvBtn').addEventListener('click', function() {
+            let fileInput = document.getElementById('csvFile');
+            let file = fileInput.files[0];
+
+            if (!file) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No file selected',
+                    text: 'Please select a CSV file to upload.',
+                });
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("csvFile", file);
+            formData.append("user_id", "<?= $user_id ?>");
+            formData.append("active_sy_id", "<?= $active_sy_id ?>");
+
+            fetch('backend/upload_csv.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    Swal.fire({
+                        icon: data.success ? 'success' : 'error',
+                        title: data.success ? 'Success' : 'Error',
+                        text: data.message,
+                    }).then(() => {
+                        if (data.success) {
+                            location.reload(); // Reload after success
+                        }
+                    });
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Failed',
+                        text: 'An error occurred while uploading the file.',
+                    });
+                });
+        });
+    </script>
+
 
 </body>
 

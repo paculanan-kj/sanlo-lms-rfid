@@ -28,7 +28,7 @@ if ($result->num_rows > 0) {
             'time_in' => $row['time_in'] ?: '--:--',
             'time_out' => $row['time_out'] ?: '--:--',
             'attendance_date' => $row['date'],
-            'photo_url' => 'uploads/' . $row['picture']
+            'photo_url' => '../../students/profile/' . $row['picture']
         ];
     }
 }

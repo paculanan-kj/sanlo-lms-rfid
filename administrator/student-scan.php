@@ -293,6 +293,15 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                                 </div>
                             </div>
 
+                            <?php
+                            include('backend/dbcon.php');
+
+                            // Fetch the active school year
+                            $query = "SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1";
+                            $result = $con->query($query);
+                            $active_school_year = ($result->num_rows > 0) ? $result->fetch_assoc()['school_year'] : '';
+
+                            ?>
                             <!-- Time Info -->
                             <div class="time-info-container">
                                 <div class="time-box">
@@ -305,157 +314,181 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve 
                                 </div>
                             </div>
                         </div>
+
+                        <div>
+                            <input type="hidden" id="activeSchoolYear" value="<?= htmlspecialchars($active_school_year); ?>">
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Vendor JS Files -->
-    <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
-    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/vendor/chart.js/chart.umd.js"></script>
-    <script src="assets/vendor/echarts/echarts.min.js"></script>
-    <script src="assets/vendor/quill/quill.js"></script>
-    <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
-    <script src="assets/vendor/tinymce/tinymce.min.js"></script>
-    <script src="assets/vendor/php-email-form/validate.js"></script>
-    <script src="assets/sweet-alert/sweetalert2.all.min.js"></script>
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/jquery.min.js"></script>
+        <!-- Vendor JS Files -->
+        <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+        <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/vendor/chart.js/chart.umd.js"></script>
+        <script src="assets/vendor/echarts/echarts.min.js"></script>
+        <script src="assets/vendor/quill/quill.js"></script>
+        <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+        <script src="assets/vendor/tinymce/tinymce.min.js"></script>
+        <script src="assets/vendor/php-email-form/validate.js"></script>
+        <script src="assets/sweet-alert/sweetalert2.all.min.js"></script>
+        <script src="assets/js/main.js"></script>
+        <script src="assets/js/jquery.min.js"></script>
 
-    <script>
-        // Function to update the current time
-        function updateDateTime() {
-            const now = new Date();
-            const time = now.toLocaleTimeString("en-US", {
-                timeZone: "Asia/Manila"
-            });
-            document.getElementById('currentTime').innerText = time;
-        }
+        <script>
+            // Function to update the current time
+            function updateDateTime() {
+                const now = new Date();
+                const time = now.toLocaleTimeString("en-US", {
+                    timeZone: "Asia/Manila"
+                });
+                document.getElementById('currentTime').innerText = time;
+            }
 
-        // Set up initial time and periodic updates
-        window.onload = updateDateTime;
-        setInterval(updateDateTime, 1000);
+            // Set up initial time and periodic updates
+            window.onload = updateDateTime;
+            setInterval(updateDateTime, 1000);
 
-        // Current user ID (from session)
-        var currentUserId = <?php echo $_SESSION['user_id']; ?>;
-        let rfidScanTimeout;
+            // Current user ID (from session)
+            var currentUserId = <?php echo $_SESSION['user_id']; ?>;
+            let rfidScanTimeout;
 
-        function handleRFIDScan() {
-            var rfidValue = document.getElementById("rfidInput").value.trim();
-            var rfidIcon = document.getElementById("rfidIcon");
+            function handleRFIDScan() {
+                var rfidValue = document.getElementById("rfidInput").value.trim();
+                var rfidIcon = document.getElementById("rfidIcon");
 
-            rfidIcon.classList.add("scanning");
-            clearTimeout(rfidScanTimeout);
+                rfidIcon.classList.add("scanning");
+                clearTimeout(rfidScanTimeout);
 
-            rfidScanTimeout = setTimeout(function() {
-                rfidIcon.classList.remove("scanning");
+                rfidScanTimeout = setTimeout(function() {
+                    rfidIcon.classList.remove("scanning");
 
-                if (rfidValue) {
-                    const currentTime = new Date().toLocaleTimeString("en-US", {
-                        timeZone: "Asia/Manila",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    });
+                    if (rfidValue) {
+                        const currentTime = new Date().toLocaleTimeString("en-US", {
+                            timeZone: "Asia/Manila",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        });
 
-                    const currentDate = new Date().toISOString().split("T")[0];
+                        const currentDate = new Date().toISOString().split("T")[0];
 
-                    // Fetch student data
-                    $.ajax({
-                        url: "backend/fetch-student-data.php",
-                        type: "POST",
-                        data: {
-                            rfid: rfidValue
-                        },
-                        success: function(response) {
-                            try {
-                                var data = JSON.parse(response);
-                                if (data.success) {
-                                    // Display student information
-                                    document.getElementById("studentName").textContent = data.student_name || "N/A";
-                                    document.getElementById("studentGradeLevel").textContent = data.grade_level || "N/A";
-                                    const studentPhoto = document.getElementById("studentPhoto");
-                                    studentPhoto.src = data.photo_url || "uploads/default.png";
+                        // Fetch student data
+                        $.ajax({
+                            url: "backend/fetch-student-data.php",
+                            type: "POST",
+                            data: {
+                                rfid: rfidValue
+                            },
+                            success: function(response) {
+                                try {
+                                    var data = JSON.parse(response);
+                                    if (data.success) {
+                                        // Display student information
+                                        document.getElementById("studentName").textContent = data.student_name || "N/A";
+                                        document.getElementById("studentGradeLevel").textContent = data.grade_level || "N/A";
+                                        const studentPhoto = document.getElementById("studentPhoto");
+                                        studentPhoto.src = data.photo_url || "uploads/default.png";
 
-                                    // Log attendance
-                                    $.ajax({
-                                        url: "backend/insert-attendance.php",
-                                        type: "POST",
-                                        data: {
-                                            student_id: data.student_id,
-                                            date: currentDate,
-                                            user_id: currentUserId,
-                                            time: currentTime
-                                        },
-                                        success: function(insertResponse) {
-                                            var insertData = JSON.parse(insertResponse);
-                                            if (insertData.success) {
-                                                // Display time-in and time-out
-                                                const timeInDisplay = document.getElementById("timeInDisplay");
-                                                const timeOutDisplay = document.getElementById("timeOutDisplay");
+                                        // Log attendance
+                                        $.ajax({
+                                            url: "backend/insert-attendance.php",
+                                            type: "POST",
+                                            data: {
+                                                student_id: data.student_id,
+                                                date: currentDate,
+                                                user_id: currentUserId,
+                                                time: currentTime
+                                            },
+                                            success: function(insertResponse) {
+                                                var insertData = JSON.parse(insertResponse);
+                                                if (insertData.success) {
+                                                    // Display time-in and time-out
+                                                    const timeInDisplay = document.getElementById("timeInDisplay");
+                                                    const timeOutDisplay = document.getElementById("timeOutDisplay");
 
-                                                timeInDisplay.textContent = insertData.time_in || '--:--';
-                                                timeOutDisplay.textContent = insertData.time_out || '--:--';
+                                                    timeInDisplay.textContent = insertData.time_in || '--:--';
+                                                    timeOutDisplay.textContent = insertData.time_out || '--:--';
 
-                                                Swal.fire({
-                                                    icon: "success",
-                                                    title: insertData.action === "time_in" ? "Time-In Logged" : "Time-Out Logged",
-                                                    text: insertData.message,
-                                                    showConfirmButton: false,
-                                                    timer: 1500
-                                                });
-                                            } else {
+                                                    Swal.fire({
+                                                        icon: "success",
+                                                        title: insertData.action === "time_in" ? "Time-In Logged" : "Time-Out Logged",
+                                                        text: insertData.message,
+                                                        showConfirmButton: false,
+                                                        timer: 1500
+                                                    });
+                                                } else {
+                                                    Swal.fire({
+                                                        icon: "error",
+                                                        title: "Failed to Log Attendance",
+                                                        text: insertData.message,
+                                                    });
+                                                }
+                                            },
+                                            error: function() {
                                                 Swal.fire({
                                                     icon: "error",
-                                                    title: "Failed to Log Attendance",
-                                                    text: insertData.message,
+                                                    title: "Error",
+                                                    text: "Failed to log attendance.",
                                                 });
-                                            }
-                                        },
-                                        error: function() {
-                                            Swal.fire({
-                                                icon: "error",
-                                                title: "Error",
-                                                text: "Failed to log attendance.",
-                                            });
-                                        },
-                                    });
-                                } else {
+                                            },
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            icon: "error",
+                                            title: "Error",
+                                            text: "Student not found.",
+                                        });
+                                    }
+                                } catch (e) {
                                     Swal.fire({
                                         icon: "error",
                                         title: "Error",
-                                        text: "Student not found.",
+                                        text: "Invalid server response.",
                                     });
                                 }
-                            } catch (e) {
+                            },
+                            error: function() {
                                 Swal.fire({
                                     icon: "error",
                                     title: "Error",
-                                    text: "Invalid server response.",
+                                    text: "Failed to fetch student data.",
                                 });
-                            }
-                        },
-                        error: function() {
-                            Swal.fire({
-                                icon: "error",
-                                title: "Error",
-                                text: "Failed to fetch student data.",
-                            });
-                        },
-                    });
-                } else {
+                            },
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Empty RFID",
+                            text: "Please scan a valid RFID.",
+                        });
+                    }
+
+                    document.getElementById("rfidInput").value = "";
+                }, 200); // Debounce
+            }
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                let schoolYear = document.getElementById("activeSchoolYear").value;
+
+                if (!schoolYear) {
+                    // Show SweetAlert2 error
                     Swal.fire({
-                        icon: "warning",
-                        title: "Empty RFID",
-                        text: "Please scan a valid RFID.",
+                        icon: 'error',
+                        title: 'Scanning Disabled!',
+                        text: 'No active school year found. Please activate a school year first.',
+                        confirmButtonColor: '#d33'
+                    });
+
+                    // Disable RFID scanning (block keypress events)
+                    document.addEventListener("keydown", function(event) {
+                        event.preventDefault(); // Prevent scanning input
                     });
                 }
-
-                document.getElementById("rfidInput").value = "";
-            }, 200); // Debounce
-        }
-    </script>
+            });
+        </script>
 
 
 </body>

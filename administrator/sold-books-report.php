@@ -1,6 +1,5 @@
 <?php
-session_start();
-
+require_once 'auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -136,7 +135,7 @@ session_start();
                                     <label for="year" style="margin-right: 5px;">Select Year:</label>
                                     <select name="year" id="year" class="form-select" style="width: auto; display: inline-block; margin-right: 10px;">
                                         <?php
-                                        // Generate year options (last 5 years for example)
+                                        // Generate year options (last 5 years)
                                         for ($y = date('Y'); $y >= date('Y') - 5; $y--) {
                                             echo "<option value='$y'" . ($selectedYear == $y ? " selected" : "") . ">$y</option>";
                                         }
@@ -146,11 +145,19 @@ session_start();
                                     <button type="submit" class="btn btn-primary"><i class="bx bx-filter me-1"></i>Filter</button>
                                 </div>
 
-                                <!-- Print Button - with "no-print" class to hide it during printing -->
-                                <button type="button" class="btn btn-secondary no-print" onclick="printTable()">
-                                    <i class="bx bx-printer me-1"></i> Print
-                                </button>
+                                <!-- Export Button -->
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-success no-print" onclick="exportTableToCSV('report.csv')">
+                                        <i class="bx bx-download me-1"></i> Export
+                                    </button>
+
+                                    <!-- Print Button -->
+                                    <button type="button" class="btn btn-secondary no-print" onclick="printTable()">
+                                        <i class="bx bx-printer me-1"></i> Print
+                                    </button>
+                                </div>
                             </form>
+
 
                             <!-- Table that will be printed -->
                             <table class="table" id="attendanceTable">
@@ -159,9 +166,6 @@ session_start();
                                         <th style="width: 20%">Book</th>
                                         <th>Student Name</th>
                                         <th>Quantity</th>
-                                        <th>Total Amount</th>
-                                        <th>Money Paid</th>
-                                        <th>Change</th>
                                     </tr>
                                 </thead>
                                 <?php
@@ -171,26 +175,29 @@ session_start();
                                 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : ''; // Retrieve user_id from session
 
                                 $query = "
-                                        SELECT 
-                                            pb.purchase_id, 
-                                            b.title,
-                                            pd.quantity, 
-                                            pb.total_amount, 
-                                            pb.cash AS student_money, 
-                                            pb.money_change, 
-                                            pb.created_at, 
-                                            CONCAT(s.firstname, ' ', s.middlename, ' ', s.lastname) AS student_name,
-                                            s.picture
-                                        FROM purchased_books pb 
-                                        LEFT JOIN purchase_details pd ON pb.purchase_id = pd.purchase_id
-                                        LEFT JOIN book b ON pd.book_id = b.book_id
-                                        LEFT JOIN book_categories c ON b.category_id = c.category_id
-                                        LEFT JOIN student s ON pb.student_id = s.student_id
-                                        WHERE pb.user_id = ?
-                                        AND MONTH(pb.created_at) = ?
-                                        AND YEAR(pb.created_at) = ?
-                                        ORDER BY pb.created_at DESC
-                                    ";
+                                SELECT 
+                                    pb.purchase_id, 
+                                    b.title,
+                                    pd.quantity, 
+                                    pb.total_amount, 
+                                    pb.cash AS student_money, 
+                                    pb.money_change, 
+                                    pb.created_at, 
+                                    s.firstname, 
+                                    s.middlename, 
+                                    s.lastname,
+                                    s.picture
+                                FROM purchased_books pb 
+                                LEFT JOIN purchase_details pd ON pb.purchase_id = pd.purchase_id
+                                LEFT JOIN book b ON pd.book_id = b.book_id
+                                LEFT JOIN book_categories c ON b.category_id = c.category_id
+                                LEFT JOIN student s ON pb.student_id = s.student_id
+                                WHERE pb.user_id = ?
+                                AND MONTH(pb.created_at) = ?
+                                AND YEAR(pb.created_at) = ?
+                                ORDER BY pb.created_at DESC
+                            ";
+
 
                                 // Prepare the query
                                 $stmt = $con->prepare($query);
@@ -213,25 +220,26 @@ session_start();
                                 ?>
                                 <tbody>
                                     <?php
-                                    // Fetch and display each book purchase
                                     while ($row = $result->fetch_assoc()) {
-                                        $picturePath = 'uploads/' . $row['picture'];
+
+                                        // Format student name: Lastname, Firstname M.
+                                        $middle = $row['middlename'] ?? ''; // In case it's not selected in the query
+                                        $middleInitial = $middle ? ucfirst(substr($middle, 0, 1)) . '.' : '';
+                                        $formattedName = $row['lastname'] . ', ' . $row['firstname'] . ' ' . $middleInitial;
+
                                         echo "<tr>";
                                         echo "<td>" . htmlspecialchars($row['title']) . "</td>"; // Title
                                         echo "<td>";
                                         echo "<div class='d-flex align-items-center'>";
-                                        echo "<img src='" . htmlspecialchars($picturePath) . "' alt='Student Image' style='width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px;'>";
-                                        echo "<span>" . htmlspecialchars($row['student_name']) . "</span>";
+                                        echo "<span>" . htmlspecialchars($formattedName) . "</span>"; // Formatted Student Name
                                         echo "</div>";
                                         echo "</td>";
                                         echo "<td><span class='badge bg-warning text-dark'>" . htmlspecialchars($row['quantity']) . "</span></td>"; // Quantity
-                                        echo "<td>₱" . number_format($row['total_amount'], 2) . "</td>"; // Total Amount
-                                        echo "<td>₱" . number_format($row['student_money'], 2) . "</td>"; // Money Paid
-                                        echo "<td>₱" . number_format($row['money_change'], 2) . "</td>"; // Change
                                         echo "</tr>";
                                     }
                                     ?>
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
@@ -256,38 +264,339 @@ session_start();
     <script src="assets/js/jquery.min.js"></script>
 
     <script>
+        window.onload = function() {
+            // Check if the page was refreshed
+            if (performance.navigation.type === 1) {
+                // Clear the table data
+                const table = document.getElementById('attendanceTable');
+                const tbody = table.getElementsByTagName('tbody')[0];
+                tbody.innerHTML = '';
+            }
+        };
+    </script>
+
+    <script>
         function printTable() {
             // Get the selected month and year from the form
-            var selectedMonth = document.getElementById('month').value;
-            var selectedYear = document.getElementById('year').value;
+            const selectedMonth = document.getElementById('month').value;
+            const selectedYear = document.getElementById('year').value;
 
             // Format the date range string
-            var monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
+            const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
                 month: 'long'
             });
-            var dateRange = "Sold Books for " + monthName + " " + selectedYear;
+            const dateRange = `${monthName} ${selectedYear}`;
+
+            // Set timezone to Philippines
+            const currentDate = new Date();
+            const options = {
+                timeZone: 'Asia/Manila',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            const printDate = new Intl.DateTimeFormat('en-PH', options).format(currentDate);
 
             // Get the table element
-            var printContent = document.getElementById('attendanceTable');
+            const printContent = document.getElementById('attendanceTable').cloneNode(true);
 
-            // Open the print dialog
-            var printWindow = window.open('', '', 'height=800,width=1200');
-            printWindow.document.write('<html><head><title>Sold Books Report</title>');
-            printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; }');
-            printWindow.document.write('th, td { padding: 8px; border: 1px solid black; text-align: left; }</style>');
-            printWindow.document.write('</head><body>');
+            // Create a new window for printing
+            const printWindow = window.open('', '', 'height=800,width=1200');
 
-            // Add the header with the school name
-            printWindow.document.write('<div class="header">St. Lorenzo School of Polomolok Inc.</div>');
+            // Add content to the print window
+            printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>Sold Books Report</title>
+            <style>
+                @page {
+                    size: portrait;
+                    margin: 1cm;
+                }
+                body {
+                    font-family: 'Arial', sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    color: #333;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 5px;
+                }
+                .school-name {
+                    font-size: 22px;
+                    font-weight: bold;
+                    color: rgb(10, 43, 194);
+                    margin-bottom: 5px;
+                }
+                .school-address {
+                    font-size: 14px;
+                    margin-bottom: 5px;
+                }
+                .school-contact {
+                    font-size: 14px;
+                    margin-bottom: 15px;
+                }
+                .report-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    text-align: center;
+                    margin: 20px 0 10px;
+                    text-transform: uppercase;
+                }
+                .report-subtitle {
+                    font-size: 16px;
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                .timestamp {
+                    font-size: 12px;
+                    text-align: right;
+                    margin-bottom: 15px;
+                    font-style: italic;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                th {
+                    background-color: rgb(10, 43, 194);
+                    color: white;
+                    padding: 10px 8px;
+                    text-align: left;
+                    font-size: 14px;
+                    border: 1px solid #ddd;
+                }
+                td {
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    font-size: 13px;
+                }
+                tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                .badge {
+                    background-color: #ffc107;
+                    color: #212529;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                .footer {
+                    margin-top: 30px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #666;
+                    border-top: 1px solid #ddd;
+                    padding-top: 10px;
+                }
+                .signature-area {
+                    margin-top: 40px;
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .signature-box {
+                    width: 30%;
+                    text-align: center;
+                }
+                .signature-line {
+                    border-top: 1px solid #000;
+                    margin-top: 30px;
+                    padding-top: 5px;
+                    font-weight: bold;
+                }
+                .position {
+                    font-size: 12px;
+                    font-style: italic;
+                }
+                @media print {
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="school-name">ST. LORENZO SCHOOL OF POLOMOLOK</div>
+                <div class="school-address">Polomolok, South Cotabato, Philippines</div>
+                <div class="school-contact">School Library | Tel: (123) 456-7890</div>
+            </div>
+            
+            <div class="report-title">SOLD BOOKS REPORT</div>
+            <div class="report-subtitle">For the Month of ${dateRange}</div>
+            
+            <div class="timestamp">Printed on: ${printDate} (PHT)</div>
+            
+            ${printContent.outerHTML}
+            
+            <div class="signature-area">
+                <div class="signature-box">
+                    <div class="signature-line">Prepared by</div>
+                    <div class="position">Librarian</div>
+                </div>
+                
+                <div class="signature-box">
+                    <div class="signature-line">Verified by</div>
+                    <div class="position">Library Coordinator</div>
+                </div>
+                
+                <div class="signature-box">
+                    <div class="signature-line">Approved by</div>
+                    <div class="position">School Principal</div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                This is an official document of St. Lorenzo School of Polomolok.<br>
+                For any queries, please contact the School Library.
+            </div>
+        </body>
+        </html>
+    `);
 
-            // Add the date range (Month & Year)
-            printWindow.document.write('<div class="date-range">' + dateRange + '</div>');
+            // Replace the badge class elements with styled spans
+            const badgeElements = printWindow.document.querySelectorAll('.badge');
+            badgeElements.forEach(badge => {
+                // Keep the text but apply our custom badge style
+                badge.classList.remove('bg-warning', 'text-dark');
+                badge.classList.add('badge');
+            });
 
-            // Add the table content
-            printWindow.document.write(printContent.outerHTML); // Print the table content
-            printWindow.document.write('</body></html>');
-            printWindow.document.close(); // Close the document for printing
-            printWindow.print(); // Trigger the print dialog
+            // Close the document and trigger print
+            printWindow.document.close();
+
+            // Add a slight delay to ensure styles are applied before printing
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+    </script>
+
+    <script>
+        function exportTableToCSV(filename) {
+            // Get the table element
+            const table = document.getElementById('attendanceTable');
+            const rows = table.querySelectorAll('tr');
+
+            // Array to store CSV content
+            let csvContent = [];
+
+            // Get header row
+            const headerRow = rows[0];
+            const headers = headerRow.querySelectorAll('th');
+            let headerData = [];
+
+            // Extract header text
+            headers.forEach(header => {
+                headerData.push('"' + header.textContent.trim() + '"');
+            });
+
+            csvContent.push(headerData.join(','));
+
+            // Track totals
+            let totalQuantity = 0;
+            let totalAmount = 0;
+
+            // Extract data from rows (starting from index 1 to skip header)
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.querySelectorAll('td');
+                let rowData = [];
+
+                // Skip if this is not a data row
+                if (cells.length < 3) continue;
+
+                // Process each cell in the row
+                cells.forEach((cell, index) => {
+                    // Remove any HTML and get just the text
+                    let text = cell.textContent.trim();
+
+                    // For quantity (index 2), extract just the number
+                    if (index === 2) {
+                        const quantity = parseInt(text);
+                        if (!isNaN(quantity)) {
+                            totalQuantity += quantity;
+                        }
+                    }
+
+                    // For amount columns (3, 4, 5), clean the peso sign and commas
+                    if (index >= 3 && index <= 5) {
+                        text = text.replace('₱', '').trim();
+
+                        // Accumulate total amount (only from the Total Amount column)
+                        if (index === 3) {
+                            const amount = parseFloat(text.replace(/,/g, ''));
+                            if (!isNaN(amount)) {
+                                totalAmount += amount;
+                            }
+                        }
+                    }
+
+                    // Escape double quotes and wrap in quotes
+                    text = '"' + text.replace(/"/g, '""') + '"';
+                    rowData.push(text);
+                });
+
+                csvContent.push(rowData.join(','));
+            }
+
+            // Add a totals row
+            if (rows.length > 1) {
+                csvContent.push([
+                    '"TOTALS:"',
+                    '""',
+                    '"' + totalQuantity + '"',
+                    '"' + totalAmount.toFixed(2) + '"',
+                    '""',
+                    '""'
+                ].join(','));
+            }
+
+            // Get the selected month and year for filename
+            const selectedMonth = document.getElementById('month').value;
+            const selectedYear = document.getElementById('year').value;
+            const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
+                month: 'long'
+            });
+
+            // Create a custom filename with date information
+            const customFilename = `Sold_Books_Report_${monthName}_${selectedYear}.csv`;
+
+            // Create a downloadable link with the CSV content
+            const csvData = csvContent.join('\n');
+            const blob = new Blob([csvData], {
+                type: 'text/csv;charset=utf-8;'
+            });
+
+            // Create download link
+            if (navigator.msSaveBlob) {
+                // For IE and Edge
+                navigator.msSaveBlob(blob, customFilename);
+            } else {
+                // For other browsers
+                const link = document.createElement('a');
+
+                // Create a URL for the blob
+                const url = URL.createObjectURL(blob);
+
+                // Set link properties
+                link.href = url;
+                link.setAttribute('download', customFilename);
+                link.style.visibility = 'hidden';
+
+                // Append to document, trigger click and remove
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         }
     </script>
 

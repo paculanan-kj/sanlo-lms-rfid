@@ -20,6 +20,15 @@ try {
     $change = isset($_POST['change']) ? floatval(str_replace('₱', '', $_POST['change'])) : 0.0;
     $created_at = date("Y-m-d H:i:s");
 
+    // Validate money
+    if ($student_money < $total_amount) {
+        echo json_encode([
+            "status" => "error",
+            "message" => "Insufficient funds. Student's money (₱" . number_format($student_money, 2) . ") is less than the total cost of books (₱" . number_format($total_amount, 2) . ")."
+        ]);
+        exit;
+    }
+
     // Get the book details from the table rows
     $bookRows = json_decode($_POST['bookRows'], true);
 
@@ -52,7 +61,6 @@ try {
     $detail_query = "INSERT INTO purchase_details (purchase_id, book_id, quantity) VALUES (?, ?, ?)";
     $detail_stmt = $con->prepare($detail_query);
 
-    // Insert each book as a purchase detail
     foreach ($bookRows as $row) {
         // Get book_id from title
         $book_query = "SELECT book_id, copies FROM book WHERE title = ?";
@@ -73,14 +81,14 @@ try {
             throw new Exception("Insufficient copies for book: " . $row['title']);
         }
 
-        // Insert purchase detail
+        // Insert into purchase details
         $detail_stmt->bind_param("iii", $purchase_id, $book_id, $quantity);
 
         if (!$detail_stmt->execute()) {
             throw new Exception("Failed to insert purchase detail: " . $detail_stmt->error);
         }
 
-        // Update book copies
+        // Update book stock
         $update_query = "UPDATE book SET copies = copies - ? WHERE book_id = ?";
         $update_stmt = $con->prepare($update_query);
         $update_stmt->bind_param("ii", $quantity, $book_id);

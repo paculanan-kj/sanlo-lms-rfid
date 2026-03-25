@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,8 +79,6 @@ session_start();
                                     <tr>
                                         <th>Name</th>
                                         <th>Username</th>
-                                        <th>Email</th>
-                                        <th>Profile Picture</th> <!-- Add column for profile picture -->
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -97,16 +95,12 @@ session_start();
                                             echo '<tr>';
                                             echo '<td>' . htmlspecialchars($fullName) . '</td>';
                                             echo '<td>' . htmlspecialchars($row['username']) . '</td>';
-                                            echo '<td>' . htmlspecialchars($row['email']) . '</td>';
-                                            echo '<td><img src="' . $profilePicturePath . '" alt="Profile Picture" class="rounded-circle" style="width: 35px; height: 35px;"></td>'; // Display profile picture
                                             echo '<td>
                                                 <button type="button" class="btn s btn-primary btn-sm update-user" 
                                                         data-id="' . $row['user_id'] . '" 
                                                         data-firstname="' . htmlspecialchars($row['firstname']) . '" 
-                                                        data-middlename="' . htmlspecialchars($row['middlename']) . '" 
                                                         data-lastname="' . htmlspecialchars($row['lastname']) . '" 
-                                                        data-username="' . htmlspecialchars($row['username']) . '" 
-                                                        data-email="' . htmlspecialchars($row['email']) . '">
+                                                        data-username="' . htmlspecialchars($row['username']) . '">
                                                     Edit
                                                 </button>
                                                 <button type="button" class="btn s btn-danger btn-sm delete-user" 
@@ -142,16 +136,8 @@ session_start();
                         <div class="modal-body">
                             <div class="row mb-3">
                                 <div class="col-12 mb-1">
-                                    <label for="rfid" class="form-label">RFID Tag</label>
-                                    <input type="text" class="form-control" id="rfid" name="rfid" placeholder="Scan RFID tag" autofocus required>
-                                </div>
-                                <div class="col-12 mb-1">
                                     <label for="firstname" class="form-label">Firstname</label>
                                     <input type="text" class="form-control" id="firstname" name="firstname" required>
-                                </div>
-                                <div class="col-12 mb-1">
-                                    <label for="middlename" class="form-label">Middlename</label>
-                                    <input type="text" class="form-control" id="middlename" name="middlename">
                                 </div>
                                 <div class="col-12 mb-1">
                                     <label for="lastname" class="form-label">Lastname</label>
@@ -161,9 +147,9 @@ session_start();
                                     <label for="username" class="form-label">Username</label>
                                     <input type="text" class="form-control" id="username" name="username" required>
                                 </div>
-                                <div class="col-12">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="col-12 mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label for="profile_picture" class="form-label">Profile Picture</label>

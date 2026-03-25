@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -74,15 +74,12 @@ session_start();
                             <table class="table datatable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 20%">Category</th>
+                                        <th style="width: 10%">Category</th>
                                         <th style="width: 20%">Title</th>
                                         <th style="width: 15%">Author</th>
-                                        <th>ISBN</th>
+                                        <th style="width: 10%">ISBN</th>
                                         <th style="width: 15%">Publisher</th>
-                                        <th style="display: none;">Publication Year</th>
-                                        <th style="display: none;">Location</th>
                                         <th>Copies</th>
-                                        <th style="display: none;">Amount</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>

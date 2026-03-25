@@ -1,12 +1,35 @@
 <?php
-include 'backend/dbcon.php'; // Include database connection
+require_once 'auth.php';          // Protect page
+include '../backend/dbcon.php';   // Adjust path if needed
 
-// Decode user_id from the URL if it's Base64 encoded
-$userId = isset($_GET['user_id']) ? base64_decode(urldecode($_GET['user_id'])) : null;
+$userId = $_SESSION['user_id'];
+
+$stmt = $con->prepare("SELECT firstname, lastname, profile_picture, userrole FROM user WHERE user_id = ?");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($user = $result->fetch_assoc()) {
+
+  $firstname = htmlspecialchars($user['firstname']);
+  $lastname = htmlspecialchars($user['lastname']);
+  $profilePicture = !empty($user['profile_picture'])
+    ? htmlspecialchars($user['profile_picture'])
+    : 'default.png';
+
+  $userrole = htmlspecialchars($user['userrole']);
+  $fullname = trim("$firstname $lastname");
+} else {
+  // If somehow user doesn't exist anymore
+  session_unset();
+  session_destroy();
+  header("Location: ../index.php");
+  exit();
+}
 
 if ($userId) {
   // Fetch user's first name, last name, profile picture, and user role
-  $stmt = $con->prepare("SELECT firstname, middlename, lastname, profile_picture, userrole FROM user WHERE user_id = ?");
+  $stmt = $con->prepare("SELECT firstname, lastname, profile_picture, userrole FROM user WHERE user_id = ?");
   $stmt->bind_param("i", $userId);
   $stmt->execute();
   $result = $stmt->get_result();
@@ -15,13 +38,12 @@ if ($userId) {
     if ($result->num_rows > 0) {
       $user = $result->fetch_assoc();
       $firstname = htmlspecialchars($user['firstname']);
-      $middlename = htmlspecialchars($user['middlename']);
       $lastname = htmlspecialchars($user['lastname']);
       $profilePicture = htmlspecialchars($user['profile_picture'] ?? 'default.png');
       $userrole = htmlspecialchars($user['userrole'] ?? 'User'); // Default role if not set
 
       // Combine first and last name
-      $fullname = $firstname . ' ' . $middlename . ' ' . $lastname;
+      $fullname = $firstname . ' ' . $lastname;
     } else {
       // No user found: handle accordingly (optional: session destroy and redirect)
       // session_destroy();
@@ -63,26 +85,6 @@ if ($userId) {
           <li class="dropdown-header">
             <h6><?php echo $fullname; ?></h6>
             <span><?php echo $userrole; ?></span>
-          </li>
-          <li>
-            <hr class="dropdown-divider">
-          </li>
-
-          <li>
-            <a class="dropdown-item d-flex align-items-center" href="#">
-              <i class="bi bi-person"></i>
-              <span>My Profile</span>
-            </a>
-          </li>
-          <li>
-            <hr class="dropdown-divider">
-          </li>
-
-          <li>
-            <a class="dropdown-item d-flex align-items-center" href="#">
-              <i class="bi bi-gear"></i>
-              <span>Account Settings</span>
-            </a>
           </li>
           <li>
             <hr class="dropdown-divider">

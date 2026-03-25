@@ -1,26 +1,28 @@
 <?php
-include 'dbcon.php'; // Include your database connection
+header('Content-Type: text/plain'); // Helpful for raw fetch responses
+include 'dbcon.php';
 
 if (isset($_GET['id'])) {
-    $studentId = intval($_GET['id']); // Ensure it's an integer to prevent SQL injection
+    $studentId = intval($_GET['id']);
 
-    // Prepare the DELETE query
     $query = "DELETE FROM student WHERE student_id = ?";
 
-    // Create a prepared statement
     if ($stmt = $con->prepare($query)) {
-        $stmt->bind_param('i', $studentId); // Bind the parameter
+        $stmt->bind_param('i', $studentId);
         if ($stmt->execute()) {
             echo "Student record deleted successfully.";
         } else {
-            echo "Error deleting record: " . $con->error;
+            http_response_code(500);
+            echo "Error deleting record: " . $stmt->error;
         }
-        $stmt->close(); // Close the statement
+        $stmt->close();
     } else {
+        http_response_code(500);
         echo "Error preparing statement: " . $con->error;
     }
 } else {
+    http_response_code(400);
     echo "No student ID provided.";
 }
 
-$con->close(); // Close the database connection
+$con->close();

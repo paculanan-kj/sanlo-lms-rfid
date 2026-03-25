@@ -1,0 +1,4 @@
+Array
+(
+    [equipment_id] => 33
+)

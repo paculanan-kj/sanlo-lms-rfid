@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,12 +43,6 @@ session_start();
     .student-attendance-card {
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-
-    .student-attendance-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
     }
 
     .student-avatar-wrapper {
@@ -136,35 +130,28 @@ session_start();
   ?>
   <main id="main" class="main">
 
+    <!-- Page Title -->
     <div class="pagetitle d-flex align-items-center justify-content-between">
       <div>
         <h1>Student Logged In</h1>
-        <?php
-        include('backend/dbcon.php');
-
-        // Fetch the active school year
-        $query = "SELECT school_year FROM school_year WHERE status = 'active' LIMIT 1";
-        $result = $con->query($query);
-        $active_school_year = ($result->num_rows > 0) ? $result->fetch_assoc()['school_year'] : 'No Active School Year';
-        ?>
         <nav>
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door"></i></a></li>
-            <li class="breadcrumb-item active">School Year: <?= htmlspecialchars($active_school_year); ?></li>
+            <li class="breadcrumb-item active">Students Today</li>
           </ol>
         </nav>
       </div>
-      <?php
-      $encoded_user_id = base64_encode($user_id);
-      ?>
-      <button onclick="location.href='student-scan.php?user_id=<?php echo $encoded_user_id; ?>';" class="btn btn-success">Student In/Out</button>
     </div>
 
     <?php
-    include('backend/fetch-today-attendance.php');
+    include('backend/dbcon.php');
+
+    // Fetch attendance data for today
+    $attendanceData = [];
+    include('backend/fetch-today-attendance.php'); // this script should populate $attendanceData array
     ?>
 
-    <!-- Display the Attendance Data -->
+    <!-- Display Attendance Data -->
     <section class="section dashboard">
       <div class="row">
         <?php if (empty($attendanceData)): ?>
@@ -173,16 +160,24 @@ session_start();
           </div>
         <?php else: ?>
           <?php foreach ($attendanceData as $student): ?>
-            <div class="col-md-3 mb-2"> <!-- Changed from col-3 to col-md-3 -->
+            <div class="col-md-4 mb-2">
               <div class="card student-attendance-card">
-                <div class="card-body">
-                  <div class="student-header text-center">
-                    <div class="student-avatar-wrapper mt-4">
-                      <img src="<?php echo $student['photo_url']; ?>" alt="Student Photo" class="student-avatar">
-                    </div>
-                    <span class="student-id text-muted"><?php echo $student['student_name']; ?></span>
+                <div class="card-body text-center">
+
+                  <!-- Student Photo -->
+                  <?php
+                  $photoPath = '../students/profile/' . $student['photo_url'];
+                  $defaultPhoto = 'assets/logo/ndk-logo.png';
+                  $displayPhoto = (!empty($student['photo_url']) && file_exists($photoPath)) ? $photoPath : $defaultPhoto;
+                  ?>
+                  <div class="student-avatar-wrapper mt-4">
+                    <img src="<?php echo $displayPhoto; ?>" alt="Student Photo" class="student-avatar">
                   </div>
 
+                  <!-- Student Name -->
+                  <span class="student-id text-muted"><?php echo htmlspecialchars($student['student_name']); ?></span>
+
+                  <!-- Attendance -->
                   <div class="attendance-details mt-4">
                     <div class="row g-3">
                       <div class="col-md-4">
@@ -206,7 +201,7 @@ session_start();
                     </div>
                   </div>
 
-                  <div class="attendance-status mt-3 text-center mb-3">
+                  <div class="attendance-status mt-3 mb-3">
                     <span class="badge <?php echo ($student['time_out'] === '--:--') ? 'bg-warning' : 'bg-success'; ?>">
                       <?php echo ($student['time_out'] === '--:--') ? 'Partially Logged' : 'Fully Logged'; ?>
                     </span>
@@ -234,7 +229,7 @@ session_start();
   <script src="assets/sweet-alert/sweetalert2.all.min.js"></script>
   <script src="assets/js/main.js"></script>
   <script src="assets/js/jquery.min.js"></script>
-
+  <!-- 
   <script>
     function checkSessionTimeout() {
       fetch('backend/session.php?check_timeout=true')
@@ -258,7 +253,7 @@ session_start();
 
     // Check every 30 seconds
     setInterval(checkSessionTimeout, 30000);
-  </script>
+  </script> -->
 </body>
 
 </html>

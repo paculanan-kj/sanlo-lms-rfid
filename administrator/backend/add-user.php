@@ -3,41 +3,18 @@ include 'dbcon.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $userrole = 'librarian';
-    $rfid = $_POST['rfid'];
     $firstname = $_POST['firstname'];
-    $middlename = $_POST['middlename'] ?? '';
     $lastname = $_POST['lastname'];
     $username = $_POST['username'];
-    $email = $_POST['email'];
+    $password = $_POST['password'];
 
-    $defaultPassword = 'Sanlorenzo2024';
-    $secretKey = 'SanLorenzoSchoolofPolomolokInc.';
-    $hashedPassword = hash_hmac('sha256', $defaultPassword, $secretKey);
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
     $uploadDir = '../uploads/';
     $profilePicture = $_FILES['profile_picture']['name'];
     $targetFile = $uploadDir . basename($profilePicture);
     move_uploaded_file($_FILES['profile_picture']['tmp_name'], $targetFile);
 
-    // Prepare SQL to check for existing RFID
-    $checkRfidSql = "SELECT COUNT(*) AS count FROM user WHERE rfid = ?";
-    $checkUsernameSql = "SELECT COUNT(*) AS count FROM user WHERE username = ?";
-
-    // Check for duplicate RFID
-    if ($checkRfidStmt = $con->prepare($checkRfidSql)) {
-        $checkRfidStmt->bind_param("s", $rfid);
-        $checkRfidStmt->execute();
-        $checkRfidStmt->bind_result($rfidCount);
-        $checkRfidStmt->fetch();
-
-        if ($rfidCount > 0) {
-            echo "Error: Duplicate RFID tag found.";
-            exit();
-        }
-        $checkRfidStmt->close();
-    }
-
-    // Check for duplicate Username
     if ($checkUsernameStmt = $con->prepare($checkUsernameSql)) {
         $checkUsernameStmt->bind_param("s", $username);
         $checkUsernameStmt->execute();
@@ -51,12 +28,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $checkUsernameStmt->close();
     }
 
-    // Insert user data if no duplicates are found
-    $insertSql = "INSERT INTO user (userrole, rfid, firstname, middlename, lastname, username, email, password, profile_picture) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $insertSql = "INSERT INTO user (userrole, firstname, lastname, username, password, profile_picture) 
+                  VALUES (?, ?, ?, ?, ?, ?)";
 
     if ($insertStmt = $con->prepare($insertSql)) {
-        $insertStmt->bind_param("sssssssss", $userrole, $rfid, $firstname, $middlename, $lastname, $username, $email, $hashedPassword, $profilePicture);
+        $insertStmt->bind_param("ssssss", $userrole, $firstname, $lastname, $username, $hashedPassword, $profilePicture);
         if ($insertStmt->execute()) {
             echo "User added successfully";
         } else {
